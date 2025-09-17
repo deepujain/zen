@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, IndianRupee } from "lucide-react";
-import { useData } from "@/hooks/use-data";
+import { useData } from "@/hooks/use-api-data";
 import { format, parseISO, startOfMonth, endOfMonth, isWithinInterval, eachDayOfInterval, startOfToday } from 'date-fns';
 
 type ExpenseCategory = 'Supplies' | 'Salary' | 'Utilities' | 'Rent' | 'Other';

@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from 'react';
-import { useData } from "@/hooks/use-data";
+import { useData } from "@/hooks/use-api-data";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";

@@ -6,7 +6,7 @@ import AppLayoutClient from "@/components/app-layout-client";
 import { useRouter } from "next/navigation";
 import Confetti from 'react-confetti';
 import { useWindowSize } from 'react-use';
-import { DataProvider } from '@/hooks/use-data';
+import { ApiDataProvider } from '@/hooks/use-api-data';
 
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -44,9 +44,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <DataProvider>
+    <ApiDataProvider>
       {showConfetti && <Confetti width={width} height={height} recycle={false} numberOfPieces={500} onConfettiComplete={() => setShowConfetti(false)} />}
       <AppLayoutClient>{children}</AppLayoutClient>
-    </DataProvider>
+    </ApiDataProvider>
   );
 }

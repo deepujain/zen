@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import type { Staff } from "@/lib/types"
-import { useData } from "@/hooks/use-data"
+import { useData } from "@/hooks/use-api-data"
 
 const formSchema = z.object({
   fullName: z.string().min(2, { message: "Full name must be at least 2 characters." }),

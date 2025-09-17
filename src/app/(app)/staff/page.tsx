@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, UserCheck, UserX, Clock, FileDown } from 'lucide-react';
-import { useData } from "@/hooks/use-data";
+import { useData } from "@/hooks/use-api-data";
 import Link from 'next/link';
 import { format, startOfMonth, isWithinInterval, parseISO, startOfYear, endOfMonth, endOfYear } from "date-fns";
 import AttendanceCalendar from "@/components/staff/attendance-calendar";

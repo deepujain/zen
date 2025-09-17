@@ -77,3 +77,9 @@ public/temp/*
 *.tmp
 *.temp
 .cache/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+wavesflow.db

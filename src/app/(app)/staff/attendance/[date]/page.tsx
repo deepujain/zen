@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useData } from '@/hooks/use-data';
+import { useData } from '@/hooks/use-api-data';
 import { format, parseISO } from 'date-fns';
 import AttendanceBoard from '@/components/staff/attendance-board';
 import type { Attendance as AttendanceType, Staff as StaffType } from '@/lib/types';
