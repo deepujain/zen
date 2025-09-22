@@ -17,13 +17,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { ArrowUpRight, Users, UserCheck, UserX, Clock, Trophy, TrendingUp, Calendar, IndianRupee, Receipt, Medal, Target } from "lucide-react";
+import { ArrowUpRight, Users, UserCheck, UserX, Clock, Trophy, TrendingUp, Calendar, IndianRupee, Receipt, Medal, Target, ArrowDownUp } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Link from 'next/link';
 import { useData } from "@/hooks/use-api-data";
 import { format, parseISO, startOfMonth, isWithinInterval, startOfYear, startOfToday, endOfMonth, endOfYear } from "date-fns";
+import { useState, useMemo, useCallback } from 'react';
+import { ArrowDown } from "lucide-react";
 
 
 const getInitials = (name: string) => {
@@ -49,13 +51,26 @@ const rankIcons = [
     },
 ];
 
-import { useState, useMemo } from 'react';
-
 export default function DashboardPage() {
   const { sales, staff, rooms, attendance } = useData();
   const today = startOfToday();
   const [timeRange, setTimeRange] = useState<'mtd' | 'ytd'>('mtd');
   const todayStr = format(today, 'yyyy-MM-dd');
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'ascending' | 'descending' | null }>({ key: 'startTime', direction: 'descending' });
+
+  const handleSort = useCallback((key: string) => {
+    setSortConfig(prevConfig => {
+      let direction: 'ascending' | 'descending' | null = 'ascending';
+      if (prevConfig.key === key) {
+        if (prevConfig.direction === 'ascending') {
+          direction = 'descending';
+        } else if (prevConfig.direction === 'descending') {
+          direction = null;
+        }
+      }
+      return { key, direction };
+    });
+  }, []);
   
   // Todays stats
   const todaysSales = sales.filter(s => s.date === todayStr);
@@ -63,7 +78,34 @@ export default function DashboardPage() {
   const customersToday = new Set(todaysSales.map(s => 
     s.customerPhone && s.customerPhone !== '-' ? s.customerPhone : s.id
   )).size;
-  const recentSales = todaysSales.slice(0, 3);
+
+  const sortedRecentSales = useMemo(() => {
+    if (!todaysSales || todaysSales.length === 0) return [];
+
+    let sortableItems = [...todaysSales];
+    if (sortConfig.key && sortConfig.direction) {
+      sortableItems.sort((a, b) => {
+        const aValue = a[sortConfig.key as keyof typeof a];
+        const bValue = b[sortConfig.key as keyof typeof b];
+
+        if (typeof aValue === 'string' && typeof bValue === 'string') {
+          if (sortConfig.key === 'startTime') {
+            const timeA = parseISO(`2000-01-01T${aValue}`);
+            const timeB = parseISO(`2000-01-01T${bValue}`);
+            return sortConfig.direction === 'ascending' ? timeA.getTime() - timeB.getTime() : timeB.getTime() - timeA.getTime();
+          }
+          return sortConfig.direction === 'ascending' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+        }
+        if (typeof aValue === 'number' && typeof bValue === 'number') {
+          return sortConfig.direction === 'ascending' ? aValue - bValue : bValue - aValue;
+        }
+        return 0;
+      });
+    }
+    return sortableItems.slice(0, 3);
+  }, [todaysSales, sortConfig]);
+
+  const recentSales = sortedRecentSales;
   
   const todaysAttendance = attendance.filter(a => a.date === todayStr);
   const presentCount = todaysAttendance.filter(a => a.status === 'Present').length;
@@ -361,10 +403,10 @@ export default function DashboardPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Therapy</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                  <TableHead className="text-right">Time</TableHead>
+                  <TableHead onClick={() => handleSort('customerName')} className="cursor-pointer hover:text-foreground">Customer {sortConfig.key === 'customerName' && (sortConfig.direction === 'ascending' ? <ArrowDown className="ml-1 inline h-4 w-4" /> : <ArrowDownUp className="ml-1 inline h-4 w-4" />)}</TableHead>
+                  <TableHead onClick={() => handleSort('therapyType')} className="cursor-pointer hover:text-foreground">Therapy {sortConfig.key === 'therapyType' && (sortConfig.direction === 'ascending' ? <ArrowDown className="ml-1 inline h-4 w-4" /> : <ArrowDownUp className="ml-1 inline h-4 w-4" />)}</TableHead>
+                  <TableHead onClick={() => handleSort('amount')} className="text-right cursor-pointer hover:text-foreground">Amount {sortConfig.key === 'amount' && (sortConfig.direction === 'ascending' ? <ArrowDown className="ml-1 inline h-4 w-4" /> : <ArrowDownUp className="ml-1 inline h-4 w-4" />)}</TableHead>
+                  <TableHead onClick={() => handleSort('startTime')} className="text-right cursor-pointer hover:text-foreground">Time {sortConfig.key === 'startTime' && (sortConfig.direction === 'ascending' ? <ArrowDown className="ml-1 inline h-4 w-4" /> : <ArrowDownUp className="ml-1 inline h-4 w-4" />)}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

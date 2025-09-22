@@ -1,11 +1,11 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { IndianRupee } from 'lucide-react';
+import { IndianRupee, ArrowDown, ArrowDownUp } from 'lucide-react';
 import type { Sale } from '@/lib/types';
 import { useData } from '@/hooks/use-api-data';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -27,6 +27,21 @@ export default function SalesSummary({ staffId, allSales }: SalesSummaryProps) {
   const { rooms } = useData();
   const [timeRange, setTimeRange] = useState<'mtd' | 'ytd'>('mtd');
   const today = new Date();
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'ascending' | 'descending' | null }>({ key: 'date', direction: 'descending' });
+
+  const handleSort = useCallback((key: string) => {
+    setSortConfig(prevConfig => {
+      let direction: 'ascending' | 'descending' | null = 'ascending';
+      if (prevConfig.key === key) {
+        if (prevConfig.direction === 'ascending') {
+          direction = 'descending';
+        } else if (prevConfig.direction === 'descending') {
+          direction = null;
+        }
+      }
+      return { key, direction };
+    });
+  }, []);
 
   const { start, end } = timeRange === 'mtd'
     ? { start: startOfMonth(today), end: endOfMonth(today) }
@@ -58,8 +73,32 @@ export default function SalesSummary({ staffId, allSales }: SalesSummaryProps) {
     .sort((a, b) => b.count - a.count)
     .slice(0, 3);
   
-  const recentSales = sales.sort((a,b) => parseISO(b.startTime).getTime() - parseISO(a.startTime).getTime()).slice(0, 5);
-  
+  const sortedRecentSales = useMemo(() => {
+    if (!sales || sales.length === 0) return [];
+
+    let sortableItems = [...sales];
+    if (sortConfig.key && sortConfig.direction) {
+      sortableItems.sort((a, b) => {
+        const aValue = a[sortConfig.key as keyof typeof a];
+        const bValue = b[sortConfig.key as keyof typeof b];
+
+        if (sortConfig.key === 'date') {
+          const dateA = parseISO(a.date);
+          const dateB = parseISO(b.date);
+          return sortConfig.direction === 'ascending' ? dateA.getTime() - dateB.getTime() : dateB.getTime() - dateA.getTime();
+        }
+        if (typeof aValue === 'string' && typeof bValue === 'string') {
+          return sortConfig.direction === 'ascending' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+        }
+        if (typeof aValue === 'number' && typeof bValue === 'number') {
+          return sortConfig.direction === 'ascending' ? aValue - bValue : bValue - aValue;
+        }
+        return 0;
+      });
+    }
+    return sortableItems.slice(0, 5);
+  }, [sales, sortConfig]);
+
   const teamTotalSales = allSales.filter(s => isWithinInterval(parseISO(s.date), { start, end })).reduce((sum, s) => sum + s.amount, 0);
   const staffContribution = teamTotalSales > 0 ? (totalSales / teamTotalSales) * 100 : 0;
   
@@ -165,14 +204,14 @@ export default function SalesSummary({ staffId, allSales }: SalesSummaryProps) {
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>Customer</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Service</TableHead>
-                        <TableHead className="text-right">Amount</TableHead>
+                        <TableHead onClick={() => handleSort('customerName')} className="cursor-pointer hover:text-foreground">Customer {sortConfig.key === 'customerName' && (sortConfig.direction === 'ascending' ? <ArrowDown className="ml-1 inline h-4 w-4" /> : <ArrowDownUp className="ml-1 inline h-4 w-4" />)}</TableHead>
+                        <TableHead onClick={() => handleSort('date')} className="cursor-pointer hover:text-foreground">Date {sortConfig.key === 'date' && (sortConfig.direction === 'ascending' ? <ArrowDown className="ml-1 inline h-4 w-4" /> : <ArrowDownUp className="ml-1 inline h-4 w-4" />)}</TableHead>
+                        <TableHead onClick={() => handleSort('therapyType')} className="cursor-pointer hover:text-foreground">Service {sortConfig.key === 'therapyType' && (sortConfig.direction === 'ascending' ? <ArrowDown className="ml-1 inline h-4 w-4" /> : <ArrowDownUp className="ml-1 inline h-4 w-4" />)}</TableHead>
+                        <TableHead onClick={() => handleSort('amount')} className="text-right cursor-pointer hover:text-foreground">Amount {sortConfig.key === 'amount' && (sortConfig.direction === 'ascending' ? <ArrowDown className="ml-1 inline h-4 w-4" /> : <ArrowDownUp className="ml-1 inline h-4 w-4" />)}</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {recentSales.map(sale => {
+                    {sortedRecentSales.map(sale => {
                         const room = rooms.find(r => r.id === sale.roomId);
                         return (
                             <TableRow key={sale.id}>
