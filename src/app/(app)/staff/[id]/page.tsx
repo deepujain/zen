@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useData } from "@/hooks/use-api-data";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,7 +23,7 @@ const getInitials = (name: string) => {
 };
 
 export default function StaffDetailPage({ params }: { params: { id: string } }) {
-  const { id } = params;
+  const { id } = React.use(params);
   const { staff, attendance, sales } = useData();
   const [editStaffOpen, setEditStaffOpen] = useState(false);
   const [editAttendanceOpen, setEditAttendanceOpen] = useState(false);

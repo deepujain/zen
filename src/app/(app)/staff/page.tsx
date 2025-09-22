@@ -165,17 +165,15 @@ export default function StaffPage() {
         </CardContent>
       </Card>
 
-      <Card className="w-full max-w-4xl mx-auto">
+      <Card className="w-full">
         <CardHeader>
           <CardTitle>Attendance Calendar</CardTitle>
-          <CardDescription>Number of therapists present each day.</CardDescription>
         </CardHeader>
-        <CardContent className="flex flex-col items-center">
+        <CardContent className="flex flex-col">
             <AttendanceCalendar attendanceData={attendance} />
             <div className="flex flex-wrap justify-center space-x-4 mt-4 text-sm">
                 <div className="flex items-center gap-2"><Badge className="bg-red-200 h-4 w-4 p-0" /> &le;3 Therapists</div>
-                <div className="flex items-center gap-2"><Badge className="bg-yellow-200 h-4 w-4 p-0" /> 4 Therapists</div>
-                <div className="flex items-center gap-2"><Badge className="bg-green-200 h-4 w-4 p-0" /> 5+ Therapists</div>
+                <div className="flex items-center gap-2"><Badge className="bg-green-200 h-4 w-4 p-0" /> 4+ Therapists</div>
             </div>
         </CardContent>
       </Card>
