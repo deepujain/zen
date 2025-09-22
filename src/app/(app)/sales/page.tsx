@@ -203,17 +203,19 @@ export default function SalesPage() {
 
   const handleExport = () => {
     const dataToExport = currentSales;
-    const headers = "Sl No,Customer,Customer Phone Number,Payment Mode,Amount,Therapist,Room,CheckIn:Checkout,Therapy\n";
+    const headers = "Sl No,Sales Date,Customer,Phone Number,Payment Mode,Amount,Therapist,Room,CheckIn:Checkout,Therapy\n";
     
     const csvRows = dataToExport.map((sale, index) => {
       const therapist = staff.find(s => s.id === sale.therapistId);
       const room = rooms.find(r => r.id === sale.roomId);
       const schedule = `${format(parseISO(sale.startTime), 'h:mm a')} - ${format(parseISO(sale.endTime), 'h:mm a')}`;
+      const cleanedPhoneNumber = sale.customerPhone.replace(/\+91|\s/g, '').trim().slice(-10);
 
       const row = [
         index + 1,
+        `"${format(parseISO(sale.date), 'dd MMM yyyy')}"`,
         `"${sale.customerName}"`,
-        `"${sale.customerPhone}"`,
+        `"${cleanedPhoneNumber}"`,
         `"${sale.paymentMethod}"`,
         sale.amount,
         `"${therapist?.fullName || ''}"`,
@@ -432,7 +434,7 @@ export default function SalesPage() {
 
           <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Sales Goal</CardTitle>
+                <CardTitle className="grid gap-4 md:grid-cols-3">Sales Goal</CardTitle>
                 <Target className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent className="space-y-2">
