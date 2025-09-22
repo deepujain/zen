@@ -131,7 +131,7 @@ export default function SalesPage() {
   const top6Therapists = useMemo(() => {
     return Object.entries(salesByTherapist)
       .sort(([, a], [, b]) => b - a)
-      .slice(0, 6)
+      .slice(0, 5)
       .map(([name, total]) => ({ name, total }));
   }, [salesByTherapist]);
 
@@ -145,7 +145,7 @@ export default function SalesPage() {
   const top6Therapies = useMemo(() => {
     return Object.entries(salesByTherapy)
       .sort(([, a], [, b]) => b - a)
-      .slice(0, 6)
+      .slice(0, 5)
       .map(([name, total]) => ({ name, total }));
   }, [salesByTherapy]);
 
