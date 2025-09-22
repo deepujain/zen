@@ -4,7 +4,7 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { PlusCircle, IndianRupee, FileDown, Calendar as CalendarIcon, ArrowUp, ArrowDown } from 'lucide-react';
+import { PlusCircle, IndianRupee, FileDown, Calendar as CalendarIcon, ArrowUp, ArrowDown, Target } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useData } from '@/hooks/use-api-data';
 import { format, parseISO, isWithinInterval, startOfDay, endOfDay, startOfMonth, endOfMonth, startOfYear, endOfYear, differenceInMinutes, eachDayOfInterval } from 'date-fns';
@@ -21,6 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Progress } from "@/components/ui/progress";
 
 
 export default function SalesPage() {
@@ -128,7 +129,7 @@ export default function SalesPage() {
     }, {} as Record<string, number>);
   }, [currentSales, staff]);
 
-  const top6Therapists = useMemo(() => {
+  const top5Therapists = useMemo(() => {
     return Object.entries(salesByTherapist)
       .sort(([, a], [, b]) => b - a)
       .slice(0, 5)
@@ -142,7 +143,7 @@ export default function SalesPage() {
     }, {} as Record<string, number>);
   }, [currentSales]);
 
-  const top6Therapies = useMemo(() => {
+  const top5Therapies = useMemo(() => {
     return Object.entries(salesByTherapy)
       .sort(([, a], [, b]) => b - a)
       .slice(0, 5)
@@ -405,7 +406,7 @@ export default function SalesPage() {
       </Sheet>
 
       <div className="grid gap-4">
-        <div className="grid gap-4 md:grid-cols-2"> {/* New grid for Total Sales and Total Therapies */}
+        <div className="grid gap-4 md:grid-cols-3"> {/* New grid for Total Sales, Total Therapies, and Monthly Sales Goal */}
           <Card>
             <CardHeader>
               <CardTitle>Total Sales</CardTitle>
@@ -428,6 +429,23 @@ export default function SalesPage() {
               </p>
             </CardContent>
           </Card>
+
+          <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Sales Goal</CardTitle>
+                <Target className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-muted-foreground">{((totalSalesForPeriod / 3000000) * 100).toFixed(1)}%</div>
+                </div>
+                <Progress value={(totalSalesForPeriod / 3000000) * 100} className="h-2" />
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <div style={{ fontFamily: 'Segoe UI, Roboto, "Helvetica Neue", Arial, sans-serif' }}>₹{totalSalesForPeriod.toLocaleString('en-IN')}</div>
+                  <div style={{ fontFamily: 'Segoe UI, Roboto, "Helvetica Neue", Arial, sans-serif' }}>Goal: ₹30,00,000</div>
+                </div>
+              </CardContent>
+          </Card>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6"> {/* Adjusted grid columns to 6 */}
@@ -437,8 +455,8 @@ export default function SalesPage() {
               <CardDescription>Total sales for the top therapists in this period.</CardDescription>
             </CardHeader>
             <CardContent>
-              {top6Therapists.length > 0 ? (
-                <SalesBarChart data={top6Therapists} type="therapist" />
+              {top5Therapists.length > 0 ? (
+                <SalesBarChart data={top5Therapists} type="therapist" />
               ) : (
                 <p className="text-sm text-muted-foreground text-center py-4">No sales data for this period.</p>
               )}
@@ -465,8 +483,8 @@ export default function SalesPage() {
               <CardDescription>Total sales for the top therapies in this period.</CardDescription>
             </CardHeader>
             <CardContent>
-              {top6Therapies.length > 0 ? (
-                <SalesBarChart data={top6Therapies} type="therapy" />
+              {top5Therapies.length > 0 ? (
+                <SalesBarChart data={top5Therapies} type="therapy" />
               ) : (
                 <p className="text-sm text-muted-foreground text-center py-4">No sales data for this period.</p>
               )}
