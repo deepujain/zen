@@ -221,13 +221,12 @@ export default function DashboardPage() {
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <div className="text-sm font-medium">Progress</div>
-                    <div className="text-sm text-muted-foreground">{((mtdTotal / 3000000) * 100).toFixed(1)}%</div>
+                    <div  style={{ fontFamily: 'Segoe UI, Roboto, "Helvetica Neue", Arial, sans-serif' }}>{((mtdTotal / 3000000) * 100).toFixed(1)}%</div>
                   </div>
                   <Progress value={(mtdTotal / 3000000) * 100} className="h-2" />
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <div>₹{mtdTotal.toLocaleString('en-IN')}</div>
-                    <div>Goal: ₹30,00,000</div>
+                    <div style={{ fontFamily: 'Segoe UI, Roboto, "Helvetica Neue", Arial, sans-serif' }}>₹{mtdTotal.toLocaleString('en-IN')}</div>
+                    <div style={{ fontFamily: 'Segoe UI, Roboto, "Helvetica Neue", Arial, sans-serif' }}>Goal: ₹30,00,000</div>
                   </div>
                 </CardContent>
             </Card>
