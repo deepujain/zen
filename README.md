@@ -99,7 +99,9 @@ Perfect for spa organizations looking to:
 
 ## Screenshots
 
-_Placeholder for Zen application screenshots._
+![Zen Login Screen](/public/screenshots/login.png)
+
+The login screen showcases our clean and modern interface design, providing secure access to the Zen application.
 
 ---
 
