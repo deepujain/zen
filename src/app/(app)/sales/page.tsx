@@ -425,13 +425,28 @@ export default function SalesPage() {
                       </TableRow>
                     )}
                     <TableRow key={sale.id} id={`sale-row-${sale.id}`}>
-                      <TableCell>
+                      <TableCell style={{ verticalAlign: 'middle' }} className="align-middle">
                         <Checkbox 
                           checked={selectedSales.includes(sale.id)}
                           onCheckedChange={(checked: boolean) => handleSelectSale(sale.id, checked)}
                         />
                       </TableCell>
-                      <TableCell>{index + 1}</TableCell><TableCell>{format(parseISO(sale.date), 'MMM d, yyyy')}</TableCell><TableCell>{sale.customerName}</TableCell><TableCell>{sale.customerPhone}</TableCell><TableCell>{sale.paymentMethod}</TableCell><TableCell className="text-right flex items-center justify-end"><IndianRupee className="w-4 h-4 mr-1" />{sale.amount.toLocaleString('en-IN')}</TableCell><TableCell>{therapist?.fullName}</TableCell><TableCell>{room?.name}</TableCell><TableCell>{schedule}</TableCell><TableCell>{sale.therapyType}</TableCell><TableCell>
+                      <TableCell style={{ verticalAlign: 'middle' }} className="align-middle">{index + 1}</TableCell>
+                      <TableCell style={{ verticalAlign: 'middle' }} className="align-middle">{format(parseISO(sale.date), 'MMM d, yyyy')}</TableCell>
+                      <TableCell style={{ verticalAlign: 'middle' }} className="align-middle">{sale.customerName}</TableCell>
+                      <TableCell style={{ verticalAlign: 'middle' }} className="align-middle">{sale.customerPhone}</TableCell>
+                      <TableCell style={{ verticalAlign: 'middle' }} className="align-middle">{sale.paymentMethod}</TableCell>
+                      <TableCell style={{ verticalAlign: 'middle' }} className="align-middle text-right">
+                        <div className="flex items-center justify-end">
+                          <IndianRupee className="w-4 h-4 mr-1" />
+                          {sale.amount.toLocaleString('en-IN')}
+                        </div>
+                      </TableCell>
+                      <TableCell style={{ verticalAlign: 'middle' }} className="align-middle">{therapist?.fullName}</TableCell>
+                      <TableCell style={{ verticalAlign: 'middle' }} className="align-middle">{room?.name}</TableCell>
+                      <TableCell style={{ verticalAlign: 'middle' }} className="align-middle">{schedule}</TableCell>
+                      <TableCell style={{ verticalAlign: 'middle' }} className="align-middle">{sale.therapyType}</TableCell>
+                      <TableCell style={{ verticalAlign: 'middle' }} className="align-middle">
                         <Button
                           variant="outline"
                           size="sm"
