@@ -17,7 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { ArrowUpRight, Users, UserCheck, UserX, Clock, Trophy, TrendingUp, Calendar, IndianRupee, Receipt, Medal, Target, ArrowDownUp } from "lucide-react";
+import { ArrowUpRight, Users, UserCheck, UserX, Clock, Trophy, TrendingUp, Calendar, IndianRupee, Receipt, Medal, Target, ArrowDownUp, Wallet } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -52,10 +52,12 @@ const rankIcons = [
 ];
 
 export default function DashboardPage() {
-  const { sales, staff, rooms, attendance } = useData();
+  const { sales, staff, rooms, attendance, expenses } = useData();
   const today = startOfToday();
   const [timeRange, setTimeRange] = useState<'mtd' | 'ytd'>('mtd');
   const todayStr = format(today, 'yyyy-MM-dd');
+  const monthStart = startOfMonth(today);
+  const yearStart = startOfYear(today);
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'ascending' | 'descending' | null }>({ key: 'startTime', direction: 'descending' });
 
   const handleSort = useCallback((key: string) => {
@@ -72,6 +74,16 @@ export default function DashboardPage() {
     });
   }, []);
   
+  // Expense stats
+  const todaysExpenses = expenses.filter(e => e.date === todayStr);
+  const todayExpenseTotal = todaysExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+
+  const mtdExpenses = expenses.filter(e => isWithinInterval(parseISO(e.date), { start: monthStart, end: today }));
+  const mtdExpenseTotal = mtdExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+
+  const ytdExpenses = expenses.filter(e => isWithinInterval(parseISO(e.date), { start: yearStart, end: today }));
+  const ytdExpenseTotal = ytdExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+
   // Todays stats
   const todaysSales = sales.filter(s => s.date === todayStr);
   const dailyTotal = todaysSales.reduce((sum, sale) => sum + sale.amount, 0);
@@ -118,12 +130,10 @@ export default function DashboardPage() {
   const absentTherapists = therapists.filter(t => !presentTherapistIds.includes(t.id));
 
   // Month-to-date stats
-  const monthStart = startOfMonth(today);
   const mtdSales = sales.filter(s => isWithinInterval(parseISO(s.date), { start: monthStart, end: today }));
   const mtdTotal = mtdSales.reduce((sum, sale) => sum + sale.amount, 0);
 
   // Year-to-date stats
-  const yearStart = startOfYear(today);
   const ytdSales = sales.filter(s => isWithinInterval(parseISO(s.date), { start: yearStart, end: today }));
   const ytdTotal = ytdSales.reduce((sum, sale) => sum + sale.amount, 0);
 
@@ -183,34 +193,105 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-4">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Today's Sales</CardTitle>
-                <IndianRupee className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                <div className="text-2xl font-bold flex items-center"><IndianRupee className="h-5 w-5 mr-1" />{dailyTotal.toLocaleString('en-IN')}</div>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Month-to-Date Sales</CardTitle>
-                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold flex items-center"><IndianRupee className="h-5 w-5 mr-1" />{mtdTotal.toLocaleString('en-IN')}</div>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Year-to-Date Sales</CardTitle>
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold flex items-center"><IndianRupee className="h-5 w-5 mr-1" />{ytdTotal.toLocaleString('en-IN')}</div>
-                </CardContent>
-            </Card>
+        <div className="grid gap-4 md:grid-cols-3">
+            <div className="space-y-4">
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium text-blue-600 dark:text-blue-400">Today's Sales</CardTitle>
+                      <IndianRupee className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold flex items-center"><IndianRupee className="h-5 w-5 mr-1" />{dailyTotal.toLocaleString('en-IN')}</div>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium text-blue-600 dark:text-blue-400">Month-to-Date Sales</CardTitle>
+                      <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold flex items-center"><IndianRupee className="h-5 w-5 mr-1" />{mtdTotal.toLocaleString('en-IN')}</div>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium text-blue-600 dark:text-blue-400">Year-to-Date Sales</CardTitle>
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold flex items-center"><IndianRupee className="h-5 w-5 mr-1" />{ytdTotal.toLocaleString('en-IN')}</div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            <div className="space-y-4">
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium text-red-600 dark:text-red-400">Today's Expenses</CardTitle>
+                      <Wallet className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold flex items-center"><IndianRupee className="h-5 w-5 mr-1" />{todayExpenseTotal.toLocaleString('en-IN')}</div>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium text-red-600 dark:text-red-400">Month-to-Date Expenses</CardTitle>
+                      <Wallet className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold flex items-center"><IndianRupee className="h-5 w-5 mr-1" />{mtdExpenseTotal.toLocaleString('en-IN')}</div>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium text-red-600 dark:text-red-400">Year-to-Date Expenses</CardTitle>
+                      <Wallet className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold flex items-center"><IndianRupee className="h-5 w-5 mr-1" />{ytdExpenseTotal.toLocaleString('en-IN')}</div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            <div className="space-y-4">
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className={`text-sm font-medium ${(dailyTotal - todayExpenseTotal) < 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>Today's Profit</CardTitle>
+                      <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className={`text-2xl font-bold flex items-center ${(dailyTotal - todayExpenseTotal) < 0 ? 'text-red-500' : 'text-green-500'}`}>
+                        <IndianRupee className="h-5 w-5 mr-1" />
+                        {Math.abs(dailyTotal - todayExpenseTotal).toLocaleString('en-IN')}
+                      </div>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className={`text-sm font-medium ${(mtdTotal - mtdExpenseTotal) < 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>Month-to-Date Profit</CardTitle>
+                      <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className={`text-2xl font-bold flex items-center ${(mtdTotal - mtdExpenseTotal) < 0 ? 'text-red-500' : 'text-green-500'}`}>
+                        <IndianRupee className="h-5 w-5 mr-1" />
+                        {Math.abs(mtdTotal - mtdExpenseTotal).toLocaleString('en-IN')}
+                      </div>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className={`text-sm font-medium ${(ytdTotal - ytdExpenseTotal) < 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>Year-to-Date Profit</CardTitle>
+                      <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className={`text-2xl font-bold flex items-center ${(ytdTotal - ytdExpenseTotal) < 0 ? 'text-red-500' : 'text-green-500'}`}>
+                        <IndianRupee className="h-5 w-5 mr-1" />
+                        {Math.abs(ytdTotal - ytdExpenseTotal).toLocaleString('en-IN')}
+                      </div>
+                    </CardContent>
+                </Card>
+            </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { format } from "date-fns";
+import { format, getDaysInMonth, isSameMonth, isSameYear, isWithinInterval, startOfMonth } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { IndianRupee } from "lucide-react";
 
@@ -49,18 +49,23 @@ export function ExpenseAnalytics({ expenses = [], selectedDate }: ExpenseAnalyti
   // Calculate analytics
   const totalExpenses = monthlyExpenses.reduce((sum, e) => sum + e.amount, 0);
   
-  // Get unique days with expenses
-  const uniqueDays = new Set(monthlyExpenses.map(e => e.date.split('T')[0])).size;
-  const avgDailyExpense = uniqueDays > 0 ? totalExpenses / uniqueDays : 0;
+  // Calculate days in month up to today
+  const monthStart = startOfMonth(selectedDate);
+  const today = new Date();
+  const daysInMonth = isSameMonth(selectedDate, today) && isSameYear(selectedDate, today)
+    ? today.getDate() // If current month, count days up to today
+    : getDaysInMonth(selectedDate); // If past month, count all days
+  
+  const avgDailyExpense = totalExpenses / daysInMonth;
 
   return (
     <div className="grid gap-4 md:grid-cols-2 mb-6">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
+          <CardTitle className="text-sm font-medium text-red-600 dark:text-red-400">Total Expenses</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold flex items-center">
+          <div className="text-2xl font-bold flex items-center text-red-600 dark:text-red-400">
             <IndianRupee className="h-5 w-5 mr-1" />
             {totalExpenses.toLocaleString("en-IN")}
           </div>
@@ -72,15 +77,15 @@ export function ExpenseAnalytics({ expenses = [], selectedDate }: ExpenseAnalyti
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Average Daily Expense</CardTitle>
+          <CardTitle className="text-sm font-medium text-red-600 dark:text-red-400">Average Daily Expense</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold flex items-center">
+          <div className="text-2xl font-bold flex items-center text-red-600 dark:text-red-400">
             <IndianRupee className="h-5 w-5 mr-1" />
             {avgDailyExpense.toLocaleString("en-IN", { maximumFractionDigits: 0 })}
           </div>
           <p className="text-xs text-muted-foreground">
-            Across {uniqueDays} days with expenses
+            Average across {daysInMonth} days month-to-date
           </p>
         </CardContent>
       </Card>

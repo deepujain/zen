@@ -65,7 +65,7 @@ export default function AttendanceCalendar({ attendanceData }: AttendanceCalenda
     if (isPlaceholder) {
       bgColorClass = "bg-transparent";
       textColorClass = "text-transparent";
-    } else if (isDisabled || isSunday) {
+    } else if (isDisabled) {
       bgColorClass = "bg-muted/20";
       textColorClass = "text-muted-foreground";
     } else {
@@ -74,7 +74,7 @@ export default function AttendanceCalendar({ attendanceData }: AttendanceCalenda
     }
 
     const handleClick = () => {
-      if (!isDisabled && !isPlaceholder && !isSunday) {
+      if (!isDisabled && !isPlaceholder) {
         router.push(`/staff/attendance/${dayStr}`);
       }
     }
@@ -85,16 +85,15 @@ export default function AttendanceCalendar({ attendanceData }: AttendanceCalenda
             className={cn(
               "border rounded-lg p-2 h-32 flex flex-col justify-between relative",
               isToday(date) && "bg-primary/10",
-              isDisabled && !isSunday && !isPlaceholder && "bg-muted/40 text-muted-foreground cursor-not-allowed",
-              isSunday && !isPlaceholder && "bg-muted/20 text-muted-foreground cursor-not-allowed",
-              !isDisabled && !isPlaceholder && !isSunday && "cursor-pointer hover:bg-muted/50",
+              isDisabled && !isPlaceholder && "bg-muted/40 text-muted-foreground cursor-not-allowed",
+              !isDisabled && !isPlaceholder && "cursor-pointer hover:bg-muted/50",
               bgColorClass, textColorClass
             )}
         >
           <div className="flex justify-between items-start">
             <div className="font-semibold">{!isPlaceholder ? dayOfMonth : ""}</div>
           </div>
-          {count > 0 && !isDisabled && !isPlaceholder && !isSunday && <div className="text-xs font-bold text-center">{count} Therapists</div>}
+          {count > 0 && !isDisabled && !isPlaceholder && <div className="text-xs font-bold text-center">{count} Therapists</div>}
         </div>
       );
   };
