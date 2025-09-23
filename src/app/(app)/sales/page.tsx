@@ -4,7 +4,7 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { PlusCircle, IndianRupee, FileDown, Calendar as CalendarIcon, ArrowUp, ArrowDown, Target } from 'lucide-react';
+import { PlusCircle, IndianRupee, FileDown, Calendar as CalendarIcon, ArrowUp, ArrowDown, Target, Pencil, Trash2, Save, X } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useData } from '@/hooks/use-api-data';
 import { format, parseISO, isWithinInterval, startOfDay, endOfDay, startOfMonth, endOfMonth, startOfYear, endOfYear, differenceInMinutes, eachDayOfInterval } from 'date-fns';
@@ -359,14 +359,18 @@ export default function SalesPage() {
     );
   };
 
-  const handleDeleteSelectedSales = async () => {
-    if (selectedSales.length === 0) return;
+  const handleDeleteSelectedSales = async (salesToDelete: string[] = selectedSales) => {
+    if (salesToDelete.length === 0) return;
 
-    if (!window.confirm(`Are you sure you want to delete ${selectedSales.length} selected sales records?`)) {
+    const message = salesToDelete.length === 1 
+      ? "Are you sure you want to delete this sale record?"
+      : `Are you sure you want to delete ${salesToDelete.length} selected sales records?`;
+
+    if (!window.confirm(message)) {
       return;
     }
 
-    for (const saleId of selectedSales) {
+    for (const saleId of salesToDelete) {
       try {
         const response = await fetch(`http://localhost:9002/api/sales?id=${saleId}`, {
           method: 'DELETE',
@@ -399,50 +403,86 @@ export default function SalesPage() {
                   {/* Removed Select All Checkbox */}
                 </TableHead>
                 <TableHead>Sl No</TableHead>
-                <TableHead className="cursor-pointer" onClick={() => requestSort('date')}>
-                  <div className="flex items-center">
-                    Sales Date {sortConfig?.key === 'date' && (sortConfig.direction === 'ascending' ? <ArrowDown className="ml-1 h-3 w-3" /> : <ArrowUp className="ml-1 h-3 w-3" />)}
-                  </div>
+                <TableHead>
+                  <Button 
+                    variant="ghost" 
+                    onClick={() => requestSort('date')} 
+                    className={`flex items-center ${sortConfig?.key === 'date' ? 'text-foreground' : ''}`}
+                  >
+                    Sales Date {sortConfig?.key === 'date' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+                  </Button>
                 </TableHead>
-                <TableHead className="cursor-pointer" onClick={() => requestSort('customerName')}>
-                  <div className="flex items-center">
-                    Customer {sortConfig?.key === 'customerName' && (sortConfig.direction === 'ascending' ? <ArrowDown className="ml-1 h-3 w-3" /> : <ArrowUp className="ml-1 h-3 w-3" />)}
-                  </div>
+                <TableHead>
+                  <Button 
+                    variant="ghost" 
+                    onClick={() => requestSort('customerName')} 
+                    className={`flex items-center ${sortConfig?.key === 'customerName' ? 'text-foreground' : ''}`}
+                  >
+                    Customer {sortConfig?.key === 'customerName' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+                  </Button>
                 </TableHead>
-                <TableHead className="cursor-pointer" onClick={() => requestSort('customerPhone')}>
-                  <div className="flex items-center">
-                    Customer Phone Number {sortConfig?.key === 'customerPhone' && (sortConfig.direction === 'ascending' ? <ArrowDown className="ml-1 h-3 w-3" /> : <ArrowUp className="ml-1 h-3 w-3" />)}
-                  </div>
+                <TableHead>
+                  <Button 
+                    variant="ghost" 
+                    onClick={() => requestSort('customerPhone')} 
+                    className={`flex items-center ${sortConfig?.key === 'customerPhone' ? 'text-foreground' : ''}`}
+                  >
+                    Customer Phone Number {sortConfig?.key === 'customerPhone' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+                  </Button>
                 </TableHead>
-                <TableHead className="cursor-pointer" onClick={() => requestSort('paymentMethod')}>
-                  <div className="flex items-center">
-                    Payment Mode {sortConfig?.key === 'paymentMethod' && (sortConfig.direction === 'ascending' ? <ArrowDown className="ml-1 h-3 w-3" /> : <ArrowUp className="ml-1 h-3 w-3" />)}
-                  </div>
+                <TableHead>
+                  <Button 
+                    variant="ghost" 
+                    onClick={() => requestSort('paymentMethod')} 
+                    className={`flex items-center ${sortConfig?.key === 'paymentMethod' ? 'text-foreground' : ''}`}
+                  >
+                    Payment Mode {sortConfig?.key === 'paymentMethod' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+                  </Button>
                 </TableHead>
-                <TableHead className="text-right cursor-pointer" onClick={() => requestSort('amount')}>
-                  <div className="flex items-center justify-end">
-                    Amount {sortConfig?.key === 'amount' && (sortConfig.direction === 'ascending' ? <ArrowDown className="ml-1 h-3 w-3" /> : <ArrowUp className="ml-1 h-3 w-3" />)}
-                  </div>
+                <TableHead>
+                  <Button 
+                    variant="ghost" 
+                    onClick={() => requestSort('amount')} 
+                    className={`flex items-center justify-end w-full ${sortConfig?.key === 'amount' ? 'text-foreground' : ''}`}
+                  >
+                    Amount {sortConfig?.key === 'amount' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+                  </Button>
                 </TableHead>
-                <TableHead className="cursor-pointer" onClick={() => requestSort('therapist')}>
-                  <div className="flex items-center">
-                    Therapist {sortConfig?.key === 'therapist' && (sortConfig.direction === 'ascending' ? <ArrowDown className="ml-1 h-3 w-3" /> : <ArrowUp className="ml-1 h-3 w-3" />)}
-                  </div>
+                <TableHead>
+                  <Button 
+                    variant="ghost" 
+                    onClick={() => requestSort('therapist')} 
+                    className={`flex items-center ${sortConfig?.key === 'therapist' ? 'text-foreground' : ''}`}
+                  >
+                    Therapist {sortConfig?.key === 'therapist' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+                  </Button>
                 </TableHead>
-                <TableHead className="cursor-pointer" onClick={() => requestSort('room')}>
-                  <div className="flex items-center">
-                    Room {sortConfig?.key === 'room' && (sortConfig.direction === 'ascending' ? <ArrowDown className="ml-1 h-3 w-3" /> : <ArrowUp className="ml-1 h-3 w-3" />)}
-                  </div>
+                <TableHead>
+                  <Button 
+                    variant="ghost" 
+                    onClick={() => requestSort('room')} 
+                    className={`flex items-center ${sortConfig?.key === 'room' ? 'text-foreground' : ''}`}
+                  >
+                    Room {sortConfig?.key === 'room' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+                  </Button>
                 </TableHead>
-                <TableHead className="cursor-pointer" onClick={() => requestSort('schedule')}>
-                  <div className="flex items-center">
-                    CheckIn:Checkout {sortConfig?.key === 'schedule' && (sortConfig.direction === 'ascending' ? <ArrowDown className="ml-1 h-3 w-3" /> : <ArrowUp className="ml-1 h-3 w-3" />)}
-                  </div>
+                <TableHead>
+                  <Button 
+                    variant="ghost" 
+                    onClick={() => requestSort('schedule')} 
+                    className={`flex items-center ${sortConfig?.key === 'schedule' ? 'text-foreground' : ''}`}
+                  >
+                    CheckIn:Checkout {sortConfig?.key === 'schedule' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+                  </Button>
                 </TableHead>
-                <TableHead className="cursor-pointer" onClick={() => requestSort('therapyType')}>
-                  <div className="flex items-center">
-                    Therapy {sortConfig?.key === 'therapyType' && (sortConfig.direction === 'ascending' ? <ArrowDown className="ml-1 h-3 w-3" /> : <ArrowUp className="ml-1 h-3 w-3" />)}
-                  </div>
+                <TableHead>
+                  <Button 
+                    variant="ghost" 
+                    onClick={() => requestSort('therapyType')} 
+                    className={`flex items-center ${sortConfig?.key === 'therapyType' ? 'text-foreground' : ''}`}
+                  >
+                    Therapy {sortConfig?.key === 'therapyType' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+                  </Button>
                 </TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
@@ -603,28 +643,37 @@ export default function SalesPage() {
                         {editingSaleId === sale.id ? (
                           <div className="flex gap-2">
                             <Button
-                              variant="outline"
-                              size="sm"
+                              size="icon"
+                              variant="ghost"
                               onClick={() => handleSaveClick(sale.id)}
                             >
-                              Save
+                              <Save className="h-4 w-4" />
                             </Button>
                             <Button
+                              size="icon"
                               variant="ghost"
-                              size="sm"
                               onClick={handleCancelEdit}
                             >
-                              Cancel
+                              <X className="h-4 w-4" />
                             </Button>
                           </div>
                         ) : (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEditClick(sale)}
-                          >
-                            Edit
-                          </Button>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => handleEditClick(sale)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => handleDeleteSelectedSales([sale.id])}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         )}
                       </TableCell>
                     </TableRow>
@@ -782,7 +831,7 @@ export default function SalesPage() {
               {selectedSales.length > 0 && (
                 <Button 
                   variant="destructive" 
-                  onClick={handleDeleteSelectedSales}
+                  onClick={() => handleDeleteSelectedSales()}
                   className="flex items-center gap-2"
                 >
                   Delete Selected ({selectedSales.length})
