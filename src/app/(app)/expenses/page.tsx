@@ -6,11 +6,12 @@ import { useData } from "@/hooks/use-api-data";
 import { MonthSelector } from "@/components/ui/month-selector";
 import { ExpensesTable } from "@/components/expenses/expenses-table";
 import { ExpenseAnalytics } from "@/components/expenses/expense-analytics";
+import type { Expense } from "@/lib/types";
 
 export default function ExpensesPage() {
   const startDate = new Date(2025, 8, 1); // September 2025
   const [selectedDate, setSelectedDate] = React.useState(startDate);
-  const [expenses, setExpenses] = React.useState<any[]>([]);
+  const [expenses, setExpenses] = React.useState<Expense[]>([]);
 
   // Fetch expenses on component mount
   React.useEffect(() => {
@@ -26,9 +27,15 @@ export default function ExpensesPage() {
       }
       const data = await response.json();
       console.log('Fetched expenses:', data);
-      setExpenses(data);
+      console.log('Expenses type:', Array.isArray(data) ? 'array' : typeof data);
+      
+      // Ensure we're setting an array
+      const expensesArray = Array.isArray(data) ? data : [];
+      setExpenses(expensesArray);
     } catch (error) {
       console.error("Error fetching expenses:", error);
+      // Set empty array on error
+      setExpenses([]);
     }
   };
 
@@ -36,7 +43,9 @@ export default function ExpensesPage() {
     try {
       // Format the date as YYYY-MM-DD for database compatibility
       const date = new Date(expenseData.date);
-      const formattedDate = format(date, "yyyy-MM-dd"); // e.g., "2025-09-23"
+      // Set time to midnight to avoid timezone issues
+      date.setHours(0, 0, 0, 0);
+      const formattedDate = format(date, "yyyy-MM-dd");
 
       const newExpense = {
         id: crypto.randomUUID(),
@@ -45,8 +54,6 @@ export default function ExpensesPage() {
         amount: Number(expenseData.amount),
         date: formattedDate,
       };
-      
-      console.log('Adding expense:', newExpense); // Debug log
       
       const response = await fetch("/api/expenses", {
         method: "POST",
@@ -68,6 +75,46 @@ export default function ExpensesPage() {
     }
   };
 
+  const handleUpdateExpense = async (expense: any) => {
+    try {
+      const response = await fetch("/api/expenses", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(expense),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update expense");
+      }
+
+      const updatedExpenses = await response.json();
+      setExpenses(updatedExpenses);
+    } catch (error) {
+      console.error("Error updating expense:", error);
+    }
+  };
+
+  const handleDeleteExpense = async (id: string) => {
+    try {
+      const response = await fetch(`/api/expenses?id=${id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to delete expense");
+      }
+
+      const updatedExpenses = await response.json();
+      setExpenses(updatedExpenses);
+    } catch (error) {
+      console.error("Error deleting expense:", error);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-end mb-6">
@@ -86,6 +133,8 @@ export default function ExpensesPage() {
       <ExpensesTable
         expenses={expenses}
         onAddExpense={handleAddExpense}
+        onUpdateExpense={handleUpdateExpense}
+        onDeleteExpense={handleDeleteExpense}
         selectedDate={selectedDate}
       />
     </div>

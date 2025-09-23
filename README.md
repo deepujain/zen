@@ -26,6 +26,13 @@ Perfect for spa organizations looking to:
 - Comprehensive view of sales by therapist, therapy type, and payment method
 - Management of rooms and therapies offered
 
+### 💰 **Expense Management**
+- Date-wise grouped expenses with bulk selection
+- Expense analytics showing totals, daily averages, and category breakdowns
+- Inline editing with predefined expense categories
+- CSV export for monthly expense reports
+- Real-time updates with SQLite persistence
+
 ### 🔐 **Authentication & Security**
 - Secure login system with persistent session management
 - Session state preserved across browser reloads/refreshes
