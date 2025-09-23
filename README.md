@@ -27,11 +27,13 @@ Perfect for spa organizations looking to:
 - Management of rooms and therapies offered
 
 ### 💰 **Expense Management**
-- Date-wise grouped expenses with bulk selection
-- Expense analytics showing totals, daily averages, and category breakdowns
-- Inline editing with predefined expense categories
+- Date-wise grouped expenses with bulk selection and inline editing
+- Expense analytics with totals, daily averages (MTD), and category breakdowns
+- Predefined expense categories with icons (Supplies, Rent, Salary, Housekeeping, Security, etc.)
+- Sortable category breakdown table with amounts and percentages
 - CSV export for monthly expense reports
 - Real-time updates with SQLite persistence
+- Color-coded expense tracking (red for expenses, green for profits)
 
 ### 🔐 **Authentication & Security**
 - Secure login system with persistent session management
@@ -40,15 +42,22 @@ Perfect for spa organizations looking to:
 - Role-based access control for different user types
 
 ### 📊 **Real-Time Dashboard**
-- At-a-glance overview of daily, month-to-date, and year-to-date sales
-- **Monthly Sales Goal tracker** to monitor progress against targets
-- Reorganized layout for clear presentation of key metrics
-- Real-time updates as sales data changes
+- At-a-glance overview of daily, month-to-date, and year-to-date metrics:
+  - Sales (in blue) for revenue tracking
+  - Expenses (in red) for cost monitoring
+  - Profit (green/red) for performance indication
+- **Monthly Sales Goal tracker** with visual progress bar
+- Top performers and therapies with MTD/YTD toggle
+- Real-time updates as data changes
+- Color-coded metrics for quick insights
 
 ### ⏰ **Smart Attendance Management**
 - Visual attendance system with calendar view
+- Support for all days including Sundays
+- Color-coded calendar cells based on staff count
 - Drag-and-drop board to update staff status (Present, Late, Absent)
 - Detailed attendance records for individual staff members
+- Real-time attendance tracking and updates
 
 ### 👥 **Staff & Sales Management**
 - Full staff lifecycle management (add, edit, view, delete)
