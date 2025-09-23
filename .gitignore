@@ -90,3 +90,9 @@ zen_sales_*.csv
 # Temporary scripts
 scripts/cleanup-expenses.ts
 scripts/update-expense-categories.ts
+scripts/insert-sales-*.ts
+scripts/setup-initial-data.ts
+
+# Daily sales data files
+scripts/sales-*.json
+!scripts/sales-template.json

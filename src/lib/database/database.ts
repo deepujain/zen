@@ -227,7 +227,7 @@ class DatabaseService {
   // Expense operations
   public getAllExpenses(): Promise<Expense[]> {
     return this.promisify<Expense[]>((callback) => {
-      this.db.all('SELECT * FROM expenses ORDER BY date DESC', (err, rows) => {
+      this.db.all('SELECT * FROM expenses ORDER BY date DESC', (err, rows: Expense[]) => {
         if (err) {
           console.error('DB: Error getting expenses:', err);
         } 

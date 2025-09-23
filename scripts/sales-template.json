@@ -1,0 +1,35 @@
+{
+  "date": "23/09/2025",
+  "sales": [
+    {
+      "customerName": "Bhargav",
+      "mobileNo": "9482491979",
+      "paymentMode": "Card",
+      "amount": "5,000",
+      "therapistName": "Liza",
+      "roomNo": "Classic",
+      "checkInOut": "5:40 / 6:40",
+      "therapyType": "Swedish"
+    },
+    {
+      "customerName": "Vidueth",
+      "mobileNo": "9482491979",
+      "paymentMode": "Card",
+      "amount": "5,000",
+      "therapistName": "Rita",
+      "roomNo": "Classic",
+      "checkInOut": "5:40 / 6:40",
+      "therapyType": "Swedish"
+    },
+    {
+      "customerName": "R. Kiran",
+      "mobileNo": "9704098027",
+      "paymentMode": "Member",
+      "amount": "Member",
+      "therapistName": "Rita",
+      "roomNo": "Thai",
+      "checkInOut": "6:47 / 7:47",
+      "therapyType": "Swedish"
+    }
+  ]
+}
