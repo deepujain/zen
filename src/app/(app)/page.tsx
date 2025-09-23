@@ -23,7 +23,8 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Link from 'next/link';
 import { useData } from "@/hooks/use-api-data";
-import { format, parseISO, startOfMonth, isWithinInterval, startOfYear, startOfToday, endOfMonth, endOfYear } from "date-fns";
+import { format, parseISO, startOfMonth, isWithinInterval, startOfYear, startOfToday, endOfMonth, endOfYear, differenceInDays } from "date-fns";
+import { CrCountdown } from "@/components/ui/cr-countdown";
 import { useState, useMemo, useCallback } from 'react';
 import { ArrowDown } from "lucide-react";
 
@@ -294,24 +295,44 @@ export default function DashboardPage() {
             </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-3">
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Monthly Sales Goal</CardTitle>
-                  <Target className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-sm font-medium text-green-600 dark:text-green-400">Monthly Sales Goal</CardTitle>
+                  <Target className="h-4 w-4 text-green-600 dark:text-green-400" />
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <div  style={{ fontFamily: 'Segoe UI, Roboto, "Helvetica Neue", Arial, sans-serif' }}>{((mtdTotal / 3000000) * 100).toFixed(1)}%</div>
+                    <div className="text-green-600 dark:text-green-400" style={{ fontFamily: 'Segoe UI, Roboto, "Helvetica Neue", Arial, sans-serif' }}>{((mtdTotal / 3000000) * 100).toFixed(1)}%</div>
                   </div>
-                  <Progress value={(mtdTotal / 3000000) * 100} className="h-2" />
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <Progress value={(mtdTotal / 3000000) * 100} className="h-2 [&>div]:bg-green-600 [&>div]:dark:bg-green-400 bg-green-100 dark:bg-green-900" />
+                  <div className="flex items-center justify-between text-xs text-green-600/75 dark:text-green-400/75">
                     <div style={{ fontFamily: 'Segoe UI, Roboto, "Helvetica Neue", Arial, sans-serif' }}>₹{mtdTotal.toLocaleString('en-IN')}</div>
                     <div style={{ fontFamily: 'Segoe UI, Roboto, "Helvetica Neue", Arial, sans-serif' }}>Goal: ₹30,00,000</div>
                   </div>
                 </CardContent>
             </Card>
             <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Daily Average Profit</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className={`text-2xl font-bold flex items-center ${(mtdTotal - mtdExpenseTotal) < 0 ? 'text-red-500' : 'text-green-500'}`}>
+                    <IndianRupee className="h-5 w-5 mr-1" />
+                    {Math.abs(Math.round((mtdTotal - mtdExpenseTotal) / (differenceInDays(today, monthStart) + 1))).toLocaleString('en-IN')}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Based on {differenceInDays(today, monthStart) + 1} days MTD
+                  </p>
+                </CardContent>
+            </Card>
+            <CrCountdown 
+                mtdSales={mtdTotal}
+                mtdExpenses={mtdExpenseTotal}
+                daysInCurrentPeriod={differenceInDays(today, monthStart) + 1}
+            />
+            <Card className="md:col-span-3">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Today's Customers</CardTitle>
                 <Users className="h-4 w-4 text-muted-foreground" />
