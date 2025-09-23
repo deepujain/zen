@@ -285,8 +285,8 @@ export default function SalesPage() {
 
   const handleSelectAllSales = (isSelected: boolean) => {
     if (isSelected) {
-      setSelectedSales(sortedSales.map(sale => sale.id));
-      setSelectedDays(Array.from(new Set(sortedSales.map(sale => format(parseISO(sale.date), 'yyyy-MM-dd')))));
+      setSelectedSales([]); // Now acts as clear all
+      setSelectedDays([]);
     } else {
       setSelectedSales([]);
       setSelectedDays([]);
@@ -349,11 +349,7 @@ export default function SalesPage() {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[50px]">
-                  <Checkbox 
-                    checked={selectedSales.length === salesToRender.length && salesToRender.length > 0}
-                    onCheckedChange={handleSelectAllSales}
-                    disabled={salesToRender.length === 0}
-                  />
+                  {/* Removed Select All Checkbox */}
                 </TableHead>
                 <TableHead>Sl No</TableHead>
                 <TableHead className="cursor-pointer" onClick={() => requestSort('date')}>
