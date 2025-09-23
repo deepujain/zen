@@ -66,7 +66,10 @@ export default function LoginPage() {
                       />
                   </div>
               </div>
-            <CardTitle className="text-2xl font-bold mb-2">Zen 🪷</CardTitle>
+            <CardTitle className="text-2xl font-bold mb-1">Zen 🪷</CardTitle>
+            <CardDescription className="text-base text-muted-foreground mb-4">
+              Spa Insights & Operations
+            </CardDescription>
             <CardDescription>
               Enter your credentials
             </CardDescription>
@@ -101,6 +104,16 @@ export default function LoginPage() {
               {isLoading ? 'Logging In...' : 'Log In'}
             </Button>
           </form>
+          <div className="mt-8 text-center">
+            <div className="flex justify-center mb-2">
+              <img 
+                src="/images/1xAI.PNG"
+                alt="1xAI Logo"
+                className="h-8 w-auto"
+              />
+            </div>
+            <p className="text-sm text-muted-foreground">AI-Powered Applications</p>
+          </div>
           </CardContent>
       </Card>
     </div>

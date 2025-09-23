@@ -1,5 +1,5 @@
 # **Zen 🪷**
-### Spa Management Application
+### Spa Insights & Operations
 
 ## Introduction
 

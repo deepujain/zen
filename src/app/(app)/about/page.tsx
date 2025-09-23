@@ -43,7 +43,7 @@ export default function AboutPage() {
             </div>
 
             <div className="text-center text-muted-foreground">
-              <p>1xAI is the creator of Zen 🪷 application, focused on intelligent analytics and actionable insights through AI-powered technologies.</p>
+              <p>1xAI is the creator of Zen 🪷 Spa Insights & Operations, an application designed to deliver intelligent analytics and actionable insights using AI-powered technologies.</p>
             </div>
 
             <div className="text-center space-y-4">
