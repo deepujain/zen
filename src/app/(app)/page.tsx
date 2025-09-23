@@ -24,7 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import Link from 'next/link';
 import { useData } from "@/hooks/use-api-data";
 import { format, parseISO, startOfMonth, isWithinInterval, startOfYear, startOfToday, endOfMonth, endOfYear, differenceInDays } from "date-fns";
-import { CrCountdownNew } from "@/components/ui/cr-countdown-new";
+import { CrCountdown } from "@/components/ui/cr-countdown";
 import { useState, useMemo, useCallback } from 'react';
 import { ArrowDown } from "lucide-react";
 
@@ -329,9 +329,9 @@ export default function DashboardPage() {
                   </p>
                 </CardContent>
             </Card>
-            <CrCountdownNew 
-                ytdSales={mtdTotal}
-                ytdExpenses={mtdExpenseTotal}
+            <CrCountdown 
+                mtdSales={mtdTotal}
+                mtdExpenses={mtdExpenseTotal}
                 daysInCurrentPeriod={differenceInDays(today, monthStart) + 1}
             />
             <Card className="md:col-span-3">
