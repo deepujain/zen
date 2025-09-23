@@ -281,6 +281,10 @@ class DatabaseService {
     };
   }
 
+  public runMigration(sql: string): void {
+    this.db.exec(sql);
+  }
+
   public close(): void {
     this.db.close();
   }

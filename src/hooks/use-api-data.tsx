@@ -14,6 +14,8 @@ interface DataContextType {
   updateStaff: (staffMember: Staff) => Promise<void>;
   addSale: (sale: Sale) => Promise<void>;
   updateSale: (sale: Sale) => Promise<void>;
+  addExpense: (expense: Expense) => Promise<void>;
+  updateExpense: (expense: Expense) => Promise<void>;
   updateAttendance: (attendanceRecord: Attendance) => Promise<void>;
   refreshData: () => Promise<void>;
   isLoading: boolean;
@@ -183,6 +185,46 @@ export function ApiDataProvider({ children }: { children: React.ReactNode }) {
     await loadData();
   };
 
+  const addExpense = async (expense: Expense) => {
+    try {
+      const response = await fetch('/api/expenses', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(expense),
+      });
+
+      if (response.ok) {
+        setExpenses(prev => [...prev, expense]);
+      } else {
+        console.error('Failed to add expense');
+      }
+    } catch (error) {
+      console.error('Error adding expense:', error);
+    }
+  };
+
+  const updateExpense = async (expense: Expense) => {
+    try {
+      const response = await fetch('/api/expenses', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(expense),
+      });
+
+      if (response.ok) {
+        setExpenses(prev => prev.map(e => e.id === expense.id ? expense : e));
+      } else {
+        console.error('Failed to update expense');
+      }
+    } catch (error) {
+      console.error('Error updating expense:', error);
+    }
+  };
+
   const value = {
     staff,
     rooms,
@@ -194,6 +236,8 @@ export function ApiDataProvider({ children }: { children: React.ReactNode }) {
     updateStaff,
     addSale,
     updateSale,
+    addExpense,
+    updateExpense,
     updateAttendance,
     refreshData,
     isLoading,

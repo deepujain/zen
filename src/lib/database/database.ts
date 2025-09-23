@@ -38,6 +38,19 @@ class DatabaseService {
     }
   }
 
+  public async runMigration(sql: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.db.exec(sql, (err) => {
+        if (err) {
+          console.error('Migration error:', err);
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
+    });
+  }
+
   // Helper method to promisify database operations
   private promisify<T>(method: (callback: (err: Error | null, result?: T) => void) => void): Promise<T> {
     return new Promise((resolve, reject) => {
@@ -213,8 +226,16 @@ class DatabaseService {
 
   // Expense operations
   public getAllExpenses(): Promise<Expense[]> {
+    console.log('DB: Getting all expenses');
     return this.promisify<Expense[]>((callback) => {
-      this.db.all('SELECT * FROM expenses ORDER BY date DESC', callback);
+      this.db.all('SELECT * FROM expenses ORDER BY date DESC', (err, rows) => {
+        if (err) {
+          console.error('DB: Error getting expenses:', err);
+        } else {
+          console.log('DB: Retrieved expenses:', rows);
+        }
+        callback(err, rows);
+      });
     });
   }
 
@@ -232,9 +253,20 @@ class DatabaseService {
   }
 
   public addExpense(expense: Expense): Promise<void> {
+    console.log('DB: Adding expense:', expense);
     return this.promisify<void>((callback) => {
-      this.db.run('INSERT INTO expenses (id, description, category, amount, date) VALUES (?, ?, ?, ?, ?)', 
-        [expense.id, expense.description, expense.category, expense.amount, expense.date], callback);
+      this.db.run(
+        'INSERT INTO expenses (id, description, category, amount, date) VALUES (?, ?, ?, ?, ?)', 
+        [expense.id, expense.description, expense.category, expense.amount, expense.date],
+        function(err) {
+          if (err) {
+            console.error('DB: Error adding expense:', err);
+          } else {
+            console.log('DB: Successfully added expense. Changes:', this.changes);
+          }
+          callback(err);
+        }
+      );
     });
   }
 

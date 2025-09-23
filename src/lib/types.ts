@@ -37,7 +37,7 @@ export type Sale = {
 export type Expense = {
   id: string;
   description: string;
-  category: 'Supplies' | 'Salary' | 'Utilities' | 'Rent' | 'Other';
+  category: 'Supplies' | 'Rent' | 'Salary' | 'Housekeeping' | 'Security' | 'Refreshments' | 'Water' | 'Snacks' | 'Marketing' | 'Phone Recharge' | 'Diesel' | 'Other';
   amount: number;
   date: string; // YYYY-MM-DD
 };

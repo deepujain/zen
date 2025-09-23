@@ -5,10 +5,12 @@ const db = DatabaseService.getInstance();
 
 export async function GET() {
   try {
+    console.log('API: Fetching all expenses');
     const expenses = await db.getAllExpenses();
+    console.log('API: Retrieved expenses:', expenses);
     return NextResponse.json(expenses);
   } catch (error) {
-    console.error('Error fetching expenses:', error);
+    console.error('API: Error fetching expenses:', error);
     return NextResponse.json({ error: 'Failed to fetch expenses' }, { status: 500 });
   }
 }
@@ -16,11 +18,33 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const expense = await request.json();
+    console.log('API: Received expense data:', expense);
+    
+    // Validate required fields
+    if (!expense.id || !expense.description || !expense.category || !expense.amount || !expense.date) {
+      console.log('API: Missing required fields:', { expense });
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
+
+    // Add the expense
+    console.log('API: Adding expense to database');
     await db.addExpense(expense);
-    return NextResponse.json({ success: true });
+
+    // Get all expenses to return updated list
+    console.log('API: Fetching updated expense list');
+    const expenses = await db.getAllExpenses();
+    console.log('API: Updated expenses:', expenses);
+    
+    return NextResponse.json(expenses);
   } catch (error) {
     console.error('Error adding expense:', error);
-    return NextResponse.json({ error: 'Failed to add expense' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to add expense', details: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    );
   }
 }
 

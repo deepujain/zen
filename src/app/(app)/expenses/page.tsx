@@ -1,121 +1,87 @@
-
 "use client";
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { PlusCircle, IndianRupee } from "lucide-react";
+import * as React from "react";
+import { format } from "date-fns";
 import { useData } from "@/hooks/use-api-data";
-import { format, parseISO, startOfMonth, endOfMonth, isWithinInterval, eachDayOfInterval, startOfToday } from 'date-fns';
-
-type ExpenseCategory = 'Supplies' | 'Salary' | 'Utilities' | 'Rent' | 'Other';
-
-const categoryIcons: Record<ExpenseCategory, string> = {
-  Supplies: '🛒',
-  Salary: '💰',
-  Utilities: '💡',
-  Rent: '🏠',
-  Other: '📦',
-};
+import { MonthSelector } from "@/components/ui/month-selector";
+import { ExpensesTable } from "@/components/expenses/expenses-table";
 
 export default function ExpensesPage() {
-  const { expenses } = useData();
-  const today = startOfToday();
-  const monthStart = startOfMonth(today);
-  const monthEnd = endOfMonth(today);
-  
-  const monthExpenses = expenses.filter(e => isWithinInterval(parseISO(e.date), { start: monthStart, end: monthEnd }));
-  const totalExpenses = monthExpenses.reduce((sum, e) => sum + e.amount, 0);
-  
-  const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd }).length;
-  const avgDaily = totalExpenses / daysInMonth;
+  const startDate = new Date(2025, 8, 1); // September 2025
+  const [selectedDate, setSelectedDate] = React.useState(startDate);
+  const [expenses, setExpenses] = React.useState<any[]>([]);
 
-  const expensesByCategory = monthExpenses.reduce((acc, expense) => {
-    if (!acc[expense.category]) {
-      acc[expense.category] = 0;
+  // Fetch expenses on component mount
+  React.useEffect(() => {
+    fetchExpenses();
+  }, []);
+
+  const fetchExpenses = async () => {
+    try {
+      console.log('Fetching expenses...');
+      const response = await fetch("/api/expenses");
+      if (!response.ok) {
+        throw new Error("Failed to fetch expenses");
+      }
+      const data = await response.json();
+      console.log('Fetched expenses:', data);
+      setExpenses(data);
+    } catch (error) {
+      console.error("Error fetching expenses:", error);
     }
-    acc[expense.category] += expense.amount;
-    return acc;
-  }, {} as Record<ExpenseCategory, number>);
+  };
 
-  const recentExpenses = monthExpenses.slice(0, 5).sort((a,b) => parseISO(b.date).getTime() - parseISO(a.date).getTime());
+  const handleAddExpense = async (expenseData: any) => {
+    try {
+      // Format the date as YYYY-MM-DD for database compatibility
+      const date = new Date(expenseData.date);
+      const formattedDate = format(date, "yyyy-MM-dd"); // e.g., "2025-09-23"
+
+      const newExpense = {
+        id: crypto.randomUUID(),
+        description: expenseData.description,
+        category: expenseData.category,
+        amount: Number(expenseData.amount),
+        date: formattedDate,
+      };
+      
+      console.log('Adding expense:', newExpense); // Debug log
+      
+      const response = await fetch("/api/expenses", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newExpense),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to add expense");
+      }
+
+      const updatedExpenses = await response.json();
+      setExpenses(updatedExpenses);
+    } catch (error) {
+      console.error("Error adding expense:", error);
+    }
+  };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold font-headline">{format(today, 'MMMM yyyy')}</h1>
-         <Button className="fixed bottom-24 right-4 md:static md:bottom-auto md:right-auto z-20 shadow-lg md:shadow-none rounded-full md:rounded-md w-14 h-14 md:w-auto md:h-auto" disabled>
-            <PlusCircle className="h-6 w-6 md:mr-2" />
-            <span className="hidden md:inline">Add Expense</span>
-        </Button>
+      <div className="flex items-center justify-end">
+        <MonthSelector
+          currentDate={selectedDate}
+          startDate={startDate}
+          onMonthChange={setSelectedDate}
+        />
       </div>
-      
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Total Expenses</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold flex items-center"><IndianRupee className="w-6 h-6 mr-1"/>{totalExpenses.toLocaleString('en-IN')}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Avg. Daily</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold flex items-center"><IndianRupee className="w-6 h-6 mr-1"/>{avgDaily.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</p>
-          </CardContent>
-        </Card>
-      </div>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>By Category</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-          {Object.entries(expensesByCategory).map(([category, amount]) => (
-            <Card key={category} className="p-4">
-              <div className="flex items-center gap-4">
-                  <div className="text-3xl">{categoryIcons[category as ExpenseCategory]}</div>
-                  <div>
-                    <p className="text-sm capitalize text-muted-foreground">{category.toLowerCase()}</p>
-                    <p className="font-bold text-lg flex items-center"><IndianRupee className="w-4 h-4 mr-1"/>{amount.toLocaleString('en-IN')}</p>
-                  </div>
-              </div>
-            </Card>
-          ))}
-        </CardContent>
-      </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Expenses</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="space-y-4">
-            {recentExpenses.map(expense => (
-              <li key={expense.id} className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="text-2xl p-3 bg-muted rounded-full">
-                    {categoryIcons[expense.category]}
-                  </div>
-                  <div>
-                    <p className="font-medium">{expense.description}</p>
-                    <p className="text-sm text-muted-foreground capitalize">{format(parseISO(expense.date), 'MMM d, yyyy')}</p>
-                  </div>
-                </div>
-                <p className="font-semibold text-right flex items-center"><IndianRupee className="w-4 h-4 mr-1"/>{expense.amount.toLocaleString('en-IN')}</p>
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
+      <ExpensesTable
+        expenses={expenses}
+        onAddExpense={handleAddExpense}
+        selectedDate={selectedDate}
+      />
     </div>
   );
 }
