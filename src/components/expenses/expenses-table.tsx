@@ -56,6 +56,7 @@ export function ExpensesTable({
 }: ExpensesTableProps) {
   const [selectedRows, setSelectedRows] = React.useState<Set<string>>(new Set());
   const [editingExpenses, setEditingExpenses] = React.useState<Record<string, EditingExpense>>({});
+  const [sorting, setSorting] = React.useState<{ column: string; direction: 'asc' | 'desc' } | null>(null);
 
   // Ensure expenses is an array
   const expensesArray = Array.isArray(expenses) ? expenses : [];
@@ -69,8 +70,24 @@ export function ExpensesTable({
     return expenseYear === selectedYear && expenseMonth === selectedMonth;
   });
 
+  // Sort expenses if sorting is set
+  const sortedExpenses = React.useMemo(() => {
+    if (!sorting) return monthlyExpenses;
+    
+    return [...monthlyExpenses].sort((a, b) => {
+      if (sorting.column === 'amount') {
+        return sorting.direction === 'asc' ? a.amount - b.amount : b.amount - a.amount;
+      }
+      const aValue = a[sorting.column as keyof Expense];
+      const bValue = b[sorting.column as keyof Expense];
+      return sorting.direction === 'asc'
+        ? aValue > bValue ? 1 : -1
+        : bValue > aValue ? 1 : -1;
+    });
+  }, [monthlyExpenses, sorting]);
+
   // Group expenses by date
-  const groupedExpenses = monthlyExpenses.reduce((groups, expense) => {
+  const groupedExpenses = sortedExpenses.reduce((groups, expense) => {
     const date = expense.date.split('T')[0];
     if (!groups[date]) {
       groups[date] = [];
@@ -130,9 +147,19 @@ export function ExpensesTable({
     });
   };
 
+  const handleSort = (column: string) => {
+    setSorting(current => {
+      if (current?.column === column) {
+        return current.direction === 'asc'
+          ? { column, direction: 'desc' }
+          : null;
+      }
+      return { column, direction: 'asc' };
+    });
+  };
 
   return (
-    <Card className="w-full max-w-5xl mx-auto">
+    <Card className="w-full max-w-7xl mx-auto">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
         <CardTitle className="text-2xl font-bold">Expenses</CardTitle>
         <div className="flex items-center gap-2">
@@ -182,185 +209,199 @@ export function ExpensesTable({
         </div>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-12"></TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead className="text-right">Amount</TableHead>
-              <TableHead className="w-24">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sortedDates.map(date => {
-              const dateExpenses = groupedExpenses[date];
-              const allSelected = dateExpenses.every(e => selectedRows.has(e.id));
-              const someSelected = dateExpenses.some(e => selectedRows.has(e.id));
-              
-              return (
-                <React.Fragment key={date}>
-                  <TableRow className="bg-muted/50">
-                    <TableCell>
-                      <Checkbox
-                        checked={allSelected}
-                        indeterminate={someSelected && !allSelected}
-                        onCheckedChange={(checked) => handleDateSelect(date, !!checked)}
-                      />
-                    </TableCell>
-                    <TableCell colSpan={4} className="font-medium">
-                      {format(new Date(date), "EEEE, MMMM d, yyyy")}
-                    </TableCell>
-                  </TableRow>
-                  {dateExpenses.map((expense) => {
-                    const isEditing = editingExpenses[expense.id]?.isEditing;
-                    const editingExpense = editingExpenses[expense.id] || expense;
+        <div className="h-[600px] overflow-auto custom-scrollbar">
+          <Table>
+            <TableHeader className="sticky top-0 bg-background z-10">
+              <TableRow>
+                <TableHead className="w-12"></TableHead>
+                <TableHead>
+                  <Button variant="ghost" onClick={() => handleSort('category')} className="flex items-center">
+                    Category {sorting?.column === 'category' && (sorting.direction === 'asc' ? '↑' : '↓')}
+                  </Button>
+                </TableHead>
+                <TableHead>
+                  <Button variant="ghost" onClick={() => handleSort('description')} className="flex items-center">
+                    Description {sorting?.column === 'description' && (sorting.direction === 'asc' ? '↑' : '↓')}
+                  </Button>
+                </TableHead>
+                <TableHead className="text-right">
+                  <Button variant="ghost" onClick={() => handleSort('amount')} className="flex items-center justify-end w-full">
+                    Amount {sorting?.column === 'amount' && (sorting.direction === 'asc' ? '↑' : '↓')}
+                  </Button>
+                </TableHead>
+                <TableHead className="w-24">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {sortedDates.map(date => {
+                const dateExpenses = groupedExpenses[date];
+                const allSelected = dateExpenses.every(e => selectedRows.has(e.id));
+                const someSelected = dateExpenses.some(e => selectedRows.has(e.id));
+                
+                return (
+                  <React.Fragment key={date}>
+                    <TableRow className="bg-muted/50">
+                      <TableCell>
+                        <Checkbox
+                          checked={allSelected}
+                          indeterminate={someSelected && !allSelected}
+                          onCheckedChange={(checked) => handleDateSelect(date, !!checked)}
+                        />
+                      </TableCell>
+                      <TableCell colSpan={5} className="font-medium">
+                        {format(new Date(date), "EEEE, MMMM d, yyyy")}
+                      </TableCell>
+                    </TableRow>
+                    {dateExpenses.map((expense) => {
+                      const isEditing = editingExpenses[expense.id]?.isEditing;
+                      const editingExpense = editingExpenses[expense.id] || expense;
 
-                    return (
-                      <TableRow key={expense.id} className={cn(selectedRows.has(expense.id) && "bg-muted/30")}>
-                        <TableCell>
-                          <Checkbox
-                            checked={selectedRows.has(expense.id)}
-                            onCheckedChange={(checked) => {
-                              setSelectedRows(prev => {
-                                const next = new Set(prev);
-                                if (checked) {
-                                  next.add(expense.id);
-                                } else {
-                                  next.delete(expense.id);
-                                }
-                                return next;
-                              });
-                            }}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          {isEditing ? (
-                            <Select
-                              value={editingExpense.category}
-                              onValueChange={(value) => {
-                                setEditingExpenses({
-                                  ...editingExpenses,
-                                  [expense.id]: { ...editingExpense, category: value }
-                                });
-                              }}
-                            >
-                              <SelectTrigger className="w-[180px]">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {Object.entries(categoryIcons).map(([category]) => (
-                                  <SelectItem key={category} value={category}>
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-xl">{categoryIcons[category]}</span>
-                                      <span>{category}</span>
-                                    </div>
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <span className="text-xl" role="img" aria-label={expense.category}>
-                                {categoryIcons[expense.category] || '📝'}
-                              </span>
-                              <span>{expense.category}</span>
-                            </div>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {isEditing ? (
-                            <Input
-                              value={editingExpense.description}
-                              onChange={(e) => {
-                                setEditingExpenses({
-                                  ...editingExpenses,
-                                  [expense.id]: { ...editingExpense, description: e.target.value }
+                      return (
+                        <TableRow key={expense.id} className={cn(selectedRows.has(expense.id) && "bg-muted/30")}>
+                          <TableCell>
+                            <Checkbox
+                              checked={selectedRows.has(expense.id)}
+                              onCheckedChange={(checked) => {
+                                setSelectedRows(prev => {
+                                  const next = new Set(prev);
+                                  if (checked) {
+                                    next.add(expense.id);
+                                  } else {
+                                    next.delete(expense.id);
+                                  }
+                                  return next;
                                 });
                               }}
                             />
-                          ) : (
-                            expense.description
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {isEditing ? (
-                            <div className="relative">
-                              <IndianRupee className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                          </TableCell>
+                          <TableCell>
+                            {isEditing ? (
+                              <Select
+                                value={editingExpense.category}
+                                onValueChange={(value) => {
+                                  setEditingExpenses({
+                                    ...editingExpenses,
+                                    [expense.id]: { ...editingExpense, category: value }
+                                  });
+                                }}
+                              >
+                                <SelectTrigger className="w-[180px]">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {Object.entries(categoryIcons).map(([category, icon]) => (
+                                    <SelectItem key={category} value={category}>
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-xl">{icon}</span>
+                                        <span>{category}</span>
+                                      </div>
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            ) : (
+                              <div className="flex items-center gap-2">
+                                <span className="text-xl" role="img" aria-label={expense.category}>
+                                  {categoryIcons[expense.category] || '📝'}
+                                </span>
+                                <span>{expense.category}</span>
+                              </div>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {isEditing ? (
                               <Input
-                                type="number"
-                                className="pl-8 text-right"
-                                value={editingExpense.amount}
+                                value={editingExpense.description}
                                 onChange={(e) => {
                                   setEditingExpenses({
                                     ...editingExpenses,
-                                    [expense.id]: { ...editingExpense, amount: Number(e.target.value) }
+                                    [expense.id]: { ...editingExpense, description: e.target.value }
                                   });
                                 }}
                               />
-                            </div>
-                          ) : (
-                            <div className="flex items-center justify-end gap-1">
-                              <IndianRupee className="h-4 w-4" />
-                              {expense.amount.toLocaleString("en-IN")}
-                            </div>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            {isEditing ? (
-                              <>
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  onClick={() => handleSave(editingExpense)}
-                                >
-                                  <Save className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  onClick={() => handleCancel(expense.id)}
-                                >
-                                  <X className="h-4 w-4" />
-                                </Button>
-                              </>
                             ) : (
-                              <>
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  onClick={() => handleEdit(expense)}
-                                >
-                                  <Pencil className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  onClick={() => handleDelete(expense.id)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </>
+                              expense.description
                             )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </React.Fragment>
-              );
-            })}
-            {monthlyExpenses.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                  <p className="text-lg">No expenses for {format(selectedDate, "MMMM yyyy")}</p>
-                  <p className="text-sm mt-1">Click "Add Expense" to record a new expense</p>
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {isEditing ? (
+                              <div className="relative">
+                                <IndianRupee className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                  type="number"
+                                  className="pl-8 text-right"
+                                  value={editingExpense.amount}
+                                  onChange={(e) => {
+                                    setEditingExpenses({
+                                      ...editingExpenses,
+                                      [expense.id]: { ...editingExpense, amount: Number(e.target.value) }
+                                    });
+                                  }}
+                                />
+                              </div>
+                            ) : (
+                              <div className="flex items-center justify-end gap-1">
+                                <IndianRupee className="h-4 w-4" />
+                                {expense.amount.toLocaleString("en-IN")}
+                              </div>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1">
+                              {isEditing ? (
+                                <>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    onClick={() => handleSave(editingExpense)}
+                                  >
+                                    <Save className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    onClick={() => handleCancel(expense.id)}
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </>
+                              ) : (
+                                <>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    onClick={() => handleEdit(expense)}
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    onClick={() => handleDelete(expense.id)}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </React.Fragment>
+                );
+              })}
+              {monthlyExpenses.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    <p className="text-lg">No expenses for {format(selectedDate, "MMMM yyyy")}</p>
+                    <p className="text-sm mt-1">Click "Add Expense" to record a new expense</p>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </CardContent>
     </Card>
   );

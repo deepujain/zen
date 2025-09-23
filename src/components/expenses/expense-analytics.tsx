@@ -53,15 +53,8 @@ export function ExpenseAnalytics({ expenses = [], selectedDate }: ExpenseAnalyti
   const uniqueDays = new Set(monthlyExpenses.map(e => e.date.split('T')[0])).size;
   const avgDailyExpense = uniqueDays > 0 ? totalExpenses / uniqueDays : 0;
 
-  // Group by category
-  const categoryTotals = monthlyExpenses.reduce((acc, expense) => {
-    acc[expense.category] = (acc[expense.category] || 0) + expense.amount;
-    return acc;
-  }, {} as Record<string, number>);
-
-
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-6">
+    <div className="grid gap-4 md:grid-cols-2 mb-6">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
@@ -89,37 +82,6 @@ export function ExpenseAnalytics({ expenses = [], selectedDate }: ExpenseAnalyti
           <p className="text-xs text-muted-foreground">
             Across {uniqueDays} days with expenses
           </p>
-        </CardContent>
-      </Card>
-
-
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Category Breakdown</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {Object.entries(categoryTotals)
-            .sort(([, a], [, b]) => b - a)
-            .slice(0, 3)
-            .map(([category, amount]) => (
-              <div key={category} className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <span className="text-lg mr-2" role="img" aria-label={category}>
-                    {categoryIcons[category]}
-                  </span>
-                  <span className="text-sm font-medium">{category}</span>
-                </div>
-                <div className="flex items-center text-sm">
-                  <IndianRupee className="h-3 w-3 mr-1" />
-                  {amount.toLocaleString("en-IN")}
-                </div>
-              </div>
-            ))}
-          {Object.keys(categoryTotals).length > 3 && (
-            <div className="text-xs text-muted-foreground text-right">
-              +{Object.keys(categoryTotals).length - 3} more categories
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>

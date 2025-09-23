@@ -15,20 +15,20 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { CalendarIcon, IndianRupee } from "lucide-react";
 
-const ExpenseCategory = {
-  Supplies: "Supplies",
-  Rent: "Rent",
-  Salary: "Salary",
-  Housekeeping: "Housekeeping",
-  Security: "Security",
-  Refreshments: "Refreshments",
-  Water: "Water",
-  Snacks: "Snacks",
-  Marketing: "Marketing",
-  PhoneRecharge: "Phone Recharge",
-  Diesel: "Diesel",
-  Other: "Other",
-} as const;
+const categoryIcons: Record<string, string> = {
+  Supplies: '🛒',
+  Rent: '🏠',
+  Salary: '💰',
+  Housekeeping: '🧹',
+  Security: '👮',
+  Refreshments: '🥤',
+  Water: '💧',
+  Snacks: '🍪',
+  Marketing: '📢',
+  'Phone Recharge': '📱',
+  Diesel: '⛽',
+  Other: '📝',
+};
 
 const expenseFormSchema = z.object({
   date: z.date({
@@ -38,7 +38,7 @@ const expenseFormSchema = z.object({
   amount: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
     message: "Amount must be a positive number",
   }),
-  category: z.enum(Object.values(ExpenseCategory) as [string, ...string[]], {
+  category: z.enum(Object.keys(categoryIcons) as [string, ...string[]], {
     required_error: "Please select a category",
   }),
 });
@@ -174,13 +174,23 @@ export function ExpenseForm({ onSubmit, defaultDate, trigger }: ExpenseFormProps
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger id="expense-category">
-                        <SelectValue placeholder="Select a category" />
+                        <SelectValue placeholder="Select a category">
+                          {field.value && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-xl">{categoryIcons[field.value]}</span>
+                              <span>{field.value}</span>
+                            </div>
+                          )}
+                        </SelectValue>
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {Object.entries(ExpenseCategory).map(([key, value]) => (
-                        <SelectItem key={value} value={value}>
-                          {key === "PhoneRecharge" ? "Phone Recharge" : key}
+                      {Object.entries(categoryIcons).map(([category, icon]) => (
+                        <SelectItem key={category} value={category}>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xl">{icon}</span>
+                            <span>{category}</span>
+                          </div>
                         </SelectItem>
                       ))}
                     </SelectContent>

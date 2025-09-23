@@ -6,6 +6,7 @@ import { useData } from "@/hooks/use-api-data";
 import { MonthSelector } from "@/components/ui/month-selector";
 import { ExpensesTable } from "@/components/expenses/expenses-table";
 import { ExpenseAnalytics } from "@/components/expenses/expense-analytics";
+import { ExpenseCategoryChart } from "@/components/expenses/expense-category-chart";
 import type { Expense } from "@/lib/types";
 
 export default function ExpensesPage() {
@@ -125,18 +126,26 @@ export default function ExpensesPage() {
         />
       </div>
 
-      <ExpenseAnalytics
-        expenses={expenses}
-        selectedDate={selectedDate}
-      />
+      <div className="space-y-6">
+        <ExpenseAnalytics
+          expenses={expenses}
+          selectedDate={selectedDate}
+        />
 
-      <ExpensesTable
-        expenses={expenses}
-        onAddExpense={handleAddExpense}
-        onUpdateExpense={handleUpdateExpense}
-        onDeleteExpense={handleDeleteExpense}
-        selectedDate={selectedDate}
-      />
+        <div className="grid gap-6 lg:grid-cols-2">
+          <ExpensesTable
+            expenses={expenses}
+            onAddExpense={handleAddExpense}
+            onUpdateExpense={handleUpdateExpense}
+            onDeleteExpense={handleDeleteExpense}
+            selectedDate={selectedDate}
+          />
+          <ExpenseCategoryChart categoryTotals={expenses.reduce((acc, expense) => {
+            acc[expense.category] = (acc[expense.category] || 0) + expense.amount;
+            return acc;
+          }, {} as Record<string, number>)} />
+        </div>
+      </div>
     </div>
   );
 }
