@@ -83,3 +83,10 @@ public/temp/*
 *.sqlite
 *.sqlite3
 wavesflow.db
+
+# Data files
+zen_sales_*.csv
+
+# Temporary scripts
+scripts/cleanup-expenses.ts
+scripts/update-expense-categories.ts
