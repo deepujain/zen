@@ -22,14 +22,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
-
+import { Checkbox } from "@/components/ui/checkbox"; // Import Checkbox
 
 export default function SalesPage() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isAddSaleSheetOpen, setIsAddSaleSheetOpen] = useState(false);
   const [editingSale, setEditingSale] = useState<Sale | null>(null);
   const [scrollToSaleId, setScrollToSaleId] = useState<string | null>(null); // New state for scrolling
-  const { sales, therapies, staff, rooms } = useData();
+  const [selectedSales, setSelectedSales] = useState<string[]>([]); // State for selected sales
+  const [selectedDays, setSelectedDays] = useState<string[]>([]); // New state for selected days
+  const { sales, therapies, staff, rooms, refreshData } = useData(); // Added mutate to refresh data
   
   const today = new Date();
 
@@ -56,11 +58,9 @@ export default function SalesPage() {
     const months = new Set<string>();
     // Start with September 2025 as the default earliest month if no sales yet
     months.add(format(new Date(2025, 8, 1), 'yyyy-MM')); // September is month 8 in JS Date (0-indexed)
-
     sales.forEach(sale => {
       months.add(format(parseISO(sale.date), 'yyyy-MM'));
     });
-
     // Sort months in descending order (latest first)
     return Array.from(months).sort((a, b) => b.localeCompare(a));
   }, [sales]);
@@ -256,6 +256,7 @@ export default function SalesPage() {
 
   const onSaleSaved = (saleId: string) => {
     setScrollToSaleId(saleId);
+    refreshData(); // Refresh data after saving a sale
   };
 
   useEffect(() => {
@@ -267,6 +268,72 @@ export default function SalesPage() {
       setScrollToSaleId(null); // Clear the scroll target after scrolling
     }
   }, [scrollToSaleId]);
+
+  const handleSelectSale = (saleId: string, isSelected: boolean) => {
+    setSelectedSales(prev => 
+      isSelected ? [...prev, saleId] : prev.filter(id => id !== saleId)
+    );
+    // If a single sale is deselected, ensure its day is also deselected in `selectedDays`
+    if (!isSelected) {
+      const sale = sales.find(s => s.id === saleId);
+      if (sale) {
+        const dateStr = format(parseISO(sale.date), 'yyyy-MM-dd');
+        setSelectedDays(prev => prev.filter(day => day !== dateStr));
+      }
+    }
+  };
+
+  const handleSelectAllSales = (isSelected: boolean) => {
+    if (isSelected) {
+      setSelectedSales(sortedSales.map(sale => sale.id));
+      setSelectedDays(Array.from(new Set(sortedSales.map(sale => format(parseISO(sale.date), 'yyyy-MM-dd')))));
+    } else {
+      setSelectedSales([]);
+      setSelectedDays([]);
+    }
+  };
+
+  const handleSelectDay = (dateStr: string, isSelected: boolean) => {
+    const salesForDay = sortedSales.filter(sale => format(parseISO(sale.date), 'yyyy-MM-dd') === dateStr);
+    const salesIdsForDay = salesForDay.map(sale => sale.id);
+
+    setSelectedSales(prev => {
+      if (isSelected) {
+        // Add all sales IDs for the day, ensuring no duplicates
+        return Array.from(new Set([...prev, ...salesIdsForDay]));
+      } else {
+        // Remove all sales IDs for the day
+        return prev.filter(id => !salesIdsForDay.includes(id));
+      }
+    });
+
+    setSelectedDays(prev => 
+      isSelected ? [...prev, dateStr] : prev.filter(day => day !== dateStr)
+    );
+  };
+
+  const handleDeleteSelectedSales = async () => {
+    if (selectedSales.length === 0) return;
+
+    if (!window.confirm(`Are you sure you want to delete ${selectedSales.length} selected sales records?`)) {
+      return;
+    }
+
+    for (const saleId of selectedSales) {
+      try {
+        const response = await fetch(`http://localhost:9002/api/sales?id=${saleId}`, {
+          method: 'DELETE',
+        });
+        if (!response.ok) {
+          console.error(`Failed to delete sale ${saleId}: ${response.statusText}`);
+        }
+      } catch (error) {
+        console.error(`Error deleting sale ${saleId}:`, error);
+      }
+    }
+    setSelectedSales([]); // Clear selection
+    refreshData(); // Refresh data after deletion
+  };
 
   const renderSalesList = (salesList: Sale[]) => {
     if (salesList.length === 0) {
@@ -281,6 +348,13 @@ export default function SalesPage() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-[50px]">
+                  <Checkbox 
+                    checked={selectedSales.length === salesToRender.length && salesToRender.length > 0}
+                    onCheckedChange={handleSelectAllSales}
+                    disabled={salesToRender.length === 0}
+                  />
+                </TableHead>
                 <TableHead>Sl No</TableHead>
                 <TableHead className="cursor-pointer" onClick={() => requestSort('date')}>
                   <div className="flex items-center">
@@ -343,12 +417,24 @@ export default function SalesPage() {
                   <React.Fragment key={sale.id}>
                     {isNewDay && (
                       <TableRow className="bg-accent/20 hover:bg-accent/20">
+                        <TableCell className="w-[50px]">
+                           <Checkbox 
+                            checked={selectedDays.includes(format(parseISO(sale.date), 'yyyy-MM-dd'))}
+                            onCheckedChange={(checked: boolean) => handleSelectDay(format(parseISO(sale.date), 'yyyy-MM-dd'), checked)}
+                          />
+                        </TableCell>
                         <TableCell colSpan={11} className="py-2 text-center text-sm font-semibold text-muted-foreground">
                           {format(parseISO(sale.date), 'EEEE, MMM d, yyyy')}
                         </TableCell>
                       </TableRow>
                     )}
                     <TableRow key={sale.id} id={`sale-row-${sale.id}`}>
+                      <TableCell>
+                        <Checkbox 
+                          checked={selectedSales.includes(sale.id)}
+                          onCheckedChange={(checked: boolean) => handleSelectSale(sale.id, checked)}
+                        />
+                      </TableCell>
                       <TableCell>{index + 1}</TableCell><TableCell>{format(parseISO(sale.date), 'MMM d, yyyy')}</TableCell><TableCell>{sale.customerName}</TableCell><TableCell>{sale.customerPhone}</TableCell><TableCell>{sale.paymentMethod}</TableCell><TableCell className="text-right flex items-center justify-end"><IndianRupee className="w-4 h-4 mr-1" />{sale.amount.toLocaleString('en-IN')}</TableCell><TableCell>{therapist?.fullName}</TableCell><TableCell>{room?.name}</TableCell><TableCell>{schedule}</TableCell><TableCell>{sale.therapyType}</TableCell><TableCell>
                         <Button
                           variant="outline"
@@ -372,18 +458,6 @@ export default function SalesPage() {
   return (
     <div className="relative space-y-6">
       <div className="flex items-center justify-end mb-4 gap-2"> {/* Aligned to right with gap */}
-        <Sheet open={isAddSaleSheetOpen} onOpenChange={setIsAddSaleSheetOpen}>
-          <SheetTrigger asChild>
-            <Button className="flex items-center gap-2"> <PlusCircle className="h-4 w-4" /> Add Sale</Button>
-          </SheetTrigger>
-          <SheetContent className="sm:max-w-[480px] w-full pr-0">
-            <SheetHeader>
-              <SheetTitle>Add New Sale</SheetTitle>
-              <SheetDescription>Fill in the details to record a new sale.</SheetDescription>
-            </SheetHeader>
-            <SaleForm setOpen={setIsAddSaleSheetOpen} onSaleSaved={onSaleSaved} />
-          </SheetContent>
-        </Sheet>
         <Select onValueChange={(value) => setSelectedMonth(value)} value={selectedMonth}>
           <SelectTrigger className="w-[180px]">
             <CalendarIcon className="mr-2 h-4 w-4" />
@@ -521,10 +595,21 @@ export default function SalesPage() {
             <div>
               <CardTitle>Sales</CardTitle>
             </div>
-             <Button variant="outline" onClick={handleExport} disabled={currentSales.length === 0}>
-              <FileDown className="h-4 w-4 mr-2" />
-              Export
-            </Button>
+            <div className="flex items-center gap-2">
+              {selectedSales.length > 0 && (
+                <Button 
+                  variant="destructive" 
+                  onClick={handleDeleteSelectedSales}
+                  className="flex items-center gap-2"
+                >
+                  Delete Selected ({selectedSales.length})
+                </Button>
+              )}
+              <Button variant="outline" onClick={handleExport} disabled={currentSales.length === 0}>
+                <FileDown className="h-4 w-4 mr-2" />
+                Export
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             {renderSalesList(sortedSales)}
