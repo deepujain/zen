@@ -49,6 +49,11 @@ Perfect for spa organizations looking to:
 - Individual attendance history
 - **Sales Table**: Individual sales records presented in a sortable and editable table
     - Includes columns for Sl No, Sales Date, Customer, Customer Phone Number, Payment Mode, Amount, Therapist, Room, CheckIn:Checkout, and Therapy.
+    - **Inline editing for all columns** with input fields for direct data modification.
+    - **Dropdowns for columns with predefined values** (Payment Mode, Therapist, Room, Therapy) for easy selection.
+    - **Row-specific "Save" and "Cancel" buttons** (replacing the "Edit" button) to manage changes only for the active row.
+    - **Row selection and bulk deletion** functionality.
+    - **Daily row selection** to select/deselect all sales for a particular day.
     - Visual separators to indicate day switching for better readability.
     - Automatic scrolling to edited rows after save operations for improved user experience.
 

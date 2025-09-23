@@ -760,7 +760,7 @@ export default function SalesPage() {
           <CardContent>
             <div className="flex flex-col lg:flex-row lg:items-start gap-4">
               <div className="w-full lg:w-11/12">
-                <SalesBarChart data={dailySalesForSelectedMonth} type="daily" />
+                <SalesBarChart data={dailySalesForSelectedMonth} type="daily" selectedMonth={selectedMonth} />
               </div>
               {dailySalesForSelectedMonth.length > 0 && (
                 <div className="w-full lg:w-1/12 mt-4 lg:mt-0 text-sm text-muted-foreground flex lg:flex-col justify-center lg:justify-start items-center lg:items-end gap-2 px-0">

@@ -12,9 +12,10 @@ interface SalesBarChartProps {
   }[];
   title?: string;
   type: 'payment' | 'therapist' | 'therapy' | 'daily';
+  selectedMonth?: string; // Format: 'YYYY-MM'
 }
 
-export function SalesBarChart({ data, title, type }: SalesBarChartProps) {
+export function SalesBarChart({ data, title, type, selectedMonth }: SalesBarChartProps) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
@@ -70,29 +71,51 @@ export function SalesBarChart({ data, title, type }: SalesBarChartProps) {
             style={{ fontFamily: 'Segoe UI, Roboto, "Helvetica Neue", Arial, sans-serif' }} // Apply font family
           />
           <Tooltip
-            cursor={{ fill: isDark ? 'hsl(var(--muted))' : 'hsl(var(--muted))' }} // Highlight bar on hover
             content={({ active, payload, label }) => {
               if (active && payload && payload.length) {
-                const item = payload[0].payload;
-                return (
-                  <Card>
-                    <CardContent className="p-2">
-                      <div className="text-sm font-medium"
-                        style={{ fontFamily: 'Segoe UI, Roboto, "Helvetica Neue", Arial, sans-serif' }} // Apply font family
-                      >
-                        {type === 'daily' ? `Day ${label}` : label}
-                      </div>
-                      <div className="text-sm font-bold"
-                        style={{ fontFamily: 'Segoe UI, Roboto, "Helvetica Neue", Arial, sans-serif' }} // Apply font family
-                      >
-                        {item.total !== null ? `₹ ${item.total.toLocaleString('en-IN')}` : "No sales"}
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
+                const value = payload[0].value as number;
+                let date;
+                try {
+                  // Construct date from selectedMonth and day
+                  let displayDate;
+                  if (selectedMonth && type === 'daily') {
+                    // label is the day of month
+                    const [year, month] = selectedMonth.split('-');
+                    const dateObj = new Date(parseInt(year), parseInt(month) - 1, parseInt(label));
+                    displayDate = dateObj.toLocaleDateString('en-US', {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    });
+                  } else {
+                    // For non-daily charts or when month is not provided
+                    displayDate = label;
+                  }
+                  const formattedAmount = value.toLocaleString('en-IN', {
+                    style: 'currency',
+                    currency: 'INR',
+                    maximumFractionDigits: 0
+                  });
+                  return (
+                    <div className="bg-background border p-2 rounded-lg shadow-lg">
+                      <p className="whitespace-nowrap">{displayDate}</p>
+                      <p className="font-bold">{formattedAmount}</p>
+                    </div>
+                  );
+                } catch (e) {
+                  // If date parsing fails, just show the label and value
+                  return (
+                    <div className="bg-background border p-2 rounded-lg shadow-lg">
+                      <p>{label}</p>
+                      <p className="font-bold">₹{value.toLocaleString('en-IN')}</p>
+                    </div>
+                  );
+                }
               }
               return null;
             }}
+            cursor={{ fill: isDark ? 'hsl(var(--muted))' : 'hsl(var(--muted))' }} // Highlight bar on hover
             wrapperStyle={{ fontFamily: 'Segoe UI, Roboto, "Helvetica Neue", Arial, sans-serif' }} // Apply font family
           />
           <Bar 
