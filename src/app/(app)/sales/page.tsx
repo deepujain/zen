@@ -23,11 +23,15 @@ import {
 } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox"; // Import Checkbox
+import { Input } from "@/components/ui/input"; // Import Input
+// Removed duplicate import for Select components
 
 export default function SalesPage() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isAddSaleSheetOpen, setIsAddSaleSheetOpen] = useState(false);
   const [editingSale, setEditingSale] = useState<Sale | null>(null);
+  const [editingSaleId, setEditingSaleId] = useState<string | null>(null);
+  const [editedSaleData, setEditedSaleData] = useState<Partial<Sale> | null>(null);
   const [scrollToSaleId, setScrollToSaleId] = useState<string | null>(null); // New state for scrolling
   const [selectedSales, setSelectedSales] = useState<string[]>([]); // State for selected sales
   const [selectedDays, setSelectedDays] = useState<string[]>([]); // New state for selected days
@@ -242,8 +246,51 @@ export default function SalesPage() {
 
   const handleEditSale = (sale: Sale) => {
     setEditingSale(sale);
-    setScrollToSaleId(sale.id); // Set the ID to scroll to
+    setEditingSaleId(sale.id); // Set the ID to scroll to
     setIsSheetOpen(true);
+  };
+
+  // New handlers for inline editing
+  const handleEditClick = (sale: Sale) => {
+    setEditingSaleId(sale.id);
+    setEditedSaleData({ ...sale });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingSaleId(null);
+    setEditedSaleData(null);
+  };
+
+  const handleSaveClick = async (saleId: string) => {
+    if (!editedSaleData) return;
+
+    try {
+      const response = await fetch('http://localhost:9002/api/sales', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(editedSaleData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to update sale: ${response.statusText}`);
+      }
+      refreshData(); // Refresh data after successful save
+      setEditingSaleId(null); // Exit editing mode
+      setEditedSaleData(null); // Clear edited data
+    } catch (error) {
+      console.error(`Error saving sale ${saleId}:`, error);
+      // Optionally, show a toast notification for the error
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setEditedSaleData(prev => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const handleSheetOpenChange = (open: boolean) => {
@@ -433,27 +480,152 @@ export default function SalesPage() {
                       </TableCell>
                       <TableCell style={{ verticalAlign: 'middle' }} className="align-middle">{index + 1}</TableCell>
                       <TableCell style={{ verticalAlign: 'middle' }} className="align-middle">{format(parseISO(sale.date), 'MMM d, yyyy')}</TableCell>
-                      <TableCell style={{ verticalAlign: 'middle' }} className="align-middle">{sale.customerName}</TableCell>
-                      <TableCell style={{ verticalAlign: 'middle' }} className="align-middle">{sale.customerPhone}</TableCell>
-                      <TableCell style={{ verticalAlign: 'middle' }} className="align-middle">{sale.paymentMethod}</TableCell>
-                      <TableCell style={{ verticalAlign: 'middle' }} className="align-middle text-right">
+                      <TableCell style={{ verticalAlign: 'middle' }} className="align-middle">
+                        {editingSaleId === sale.id ? (
+                          <Input 
+                            name="customerName"
+                            value={editedSaleData?.customerName || ''}
+                            onChange={handleChange}
+                          />
+                        ) : (
+                          sale.customerName
+                        )}
+                      </TableCell>
+                      <TableCell style={{ verticalAlign: 'middle' }} className="align-middle">
+                        {editingSaleId === sale.id ? (
+                          <Input 
+                            name="customerPhone"
+                            value={editedSaleData?.customerPhone || ''}
+                            onChange={handleChange}
+                          />
+                        ) : (
+                          sale.customerPhone
+                        )}
+                      </TableCell>
+                      <TableCell style={{ verticalAlign: 'middle' }} className="align-middle">
+                        {editingSaleId === sale.id ? (
+                          <Select
+                            name="paymentMethod"
+                            value={editedSaleData?.paymentMethod || sale.paymentMethod}
+                            onValueChange={(value) => handleChange({ target: { name: 'paymentMethod', value } } as React.ChangeEvent<HTMLSelectElement>)}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select payment method" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="UPI">UPI</SelectItem>
+                              <SelectItem value="Cash">Cash</SelectItem>
+                              <SelectItem value="Card">Card</SelectItem>
+                              <SelectItem value="Member">Member</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          sale.paymentMethod
+                        )}
+                      </TableCell>
+                      <TableCell style={{ verticalAlign: 'middle' }} className="align-middle">
                         <div className="flex items-center justify-end">
                           <IndianRupee className="w-4 h-4 mr-1" />
-                          {sale.amount.toLocaleString('en-IN')}
+                          {editingSaleId === sale.id ? (
+                            <Input 
+                              name="amount"
+                              type="number"
+                              value={editedSaleData?.amount?.toString() || ''}
+                              onChange={handleChange}
+                            />
+                          ) : (
+                            sale.amount.toLocaleString('en-IN')
+                          )}
                         </div>
                       </TableCell>
-                      <TableCell style={{ verticalAlign: 'middle' }} className="align-middle">{therapist?.fullName}</TableCell>
-                      <TableCell style={{ verticalAlign: 'middle' }} className="align-middle">{room?.name}</TableCell>
-                      <TableCell style={{ verticalAlign: 'middle' }} className="align-middle">{schedule}</TableCell>
-                      <TableCell style={{ verticalAlign: 'middle' }} className="align-middle">{sale.therapyType}</TableCell>
                       <TableCell style={{ verticalAlign: 'middle' }} className="align-middle">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEditSale(sale)}
-                        >
-                          Edit
-                        </Button>
+                        {editingSaleId === sale.id ? (
+                          <Select
+                            name="therapistId"
+                            value={editedSaleData?.therapistId || sale.therapistId}
+                            onValueChange={(value) => handleChange({ target: { name: 'therapistId', value } } as React.ChangeEvent<HTMLSelectElement>)}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select therapist" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {staff.map(s => (
+                                <SelectItem key={s.id} value={s.id}>{s.fullName}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          therapist?.fullName
+                        )}
+                      </TableCell>
+                      <TableCell style={{ verticalAlign: 'middle' }} className="align-middle">
+                        {editingSaleId === sale.id ? (
+                          <Select
+                            name="roomId"
+                            value={editedSaleData?.roomId || sale.roomId}
+                            onValueChange={(value) => handleChange({ target: { name: 'roomId', value } } as React.ChangeEvent<HTMLSelectElement>)}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select room" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {rooms.map(r => (
+                                <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          room?.name
+                        )}
+                      </TableCell>
+                      <TableCell style={{ verticalAlign: 'middle' }} className="align-middle">{schedule}</TableCell>
+                      <TableCell style={{ verticalAlign: 'middle' }} className="align-middle">
+                        {editingSaleId === sale.id ? (
+                          <Select
+                            name="therapyType"
+                            value={editedSaleData?.therapyType || sale.therapyType}
+                            onValueChange={(value) => handleChange({ target: { name: 'therapyType', value } } as React.ChangeEvent<HTMLSelectElement>)}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select therapy" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {therapies.map(t => (
+                                <SelectItem key={t.id} value={t.name}>{t.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          sale.therapyType
+                        )}
+                      </TableCell>
+                      <TableCell style={{ verticalAlign: 'middle' }} className="align-middle">
+                        {editingSaleId === sale.id ? (
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleSaveClick(sale.id)}
+                            >
+                              Save
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={handleCancelEdit}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditClick(sale)}
+                          >
+                            Edit
+                          </Button>
+                        )}
                       </TableCell>
                     </TableRow>
                   </React.Fragment>
