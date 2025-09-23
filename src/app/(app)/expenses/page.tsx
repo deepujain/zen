@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { useData } from "@/hooks/use-api-data";
 import { MonthSelector } from "@/components/ui/month-selector";
 import { ExpensesTable } from "@/components/expenses/expenses-table";
+import { ExpenseAnalytics } from "@/components/expenses/expense-analytics";
 
 export default function ExpensesPage() {
   const startDate = new Date(2025, 8, 1); // September 2025
@@ -69,13 +70,18 @@ export default function ExpensesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-end">
+      <div className="flex items-center justify-end mb-6">
         <MonthSelector
           currentDate={selectedDate}
           startDate={startDate}
           onMonthChange={setSelectedDate}
         />
       </div>
+
+      <ExpenseAnalytics
+        expenses={expenses}
+        selectedDate={selectedDate}
+      />
 
       <ExpensesTable
         expenses={expenses}
