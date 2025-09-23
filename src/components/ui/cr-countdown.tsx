@@ -4,9 +4,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { CircularProgress } from "@/components/ui/circular-progress";
 
 interface CrCountdownProps {
-  mtdSales: number;
-  mtdExpenses: number;
-  daysInCurrentPeriod: number;
+  mtdSales: number; // Actually YTD sales
+  mtdExpenses: number; // Actually YTD expenses
+  daysInCurrentPeriod: number; // Days in current year
 }
 
 const ONE_CR = 10000000; // ₹1,00,00,000
@@ -26,17 +26,28 @@ function calculateTimeToOneCr(dailyProfit: number): { years: number; months: num
   return { years, months, days };
 }
 
-function calculateProgressPercentage(dailyProfit: number): number {
-  // We'll consider ₹50,000/day as 100% on our gauge (reaching 1 Cr in ~200 days)
-  const maxDailyProfit = 50000;
-  return Math.min(100, Math.max(0, (dailyProfit / maxDailyProfit) * 100));
+function calculateProgressPercentage(totalProfit: number): number {
+  // Calculate what percentage of 1 Cr has been achieved
+  return Math.min(100, Math.max(0, (totalProfit / ONE_CR) * 100));
 }
 
 export function CrCountdown({ mtdSales, mtdExpenses, daysInCurrentPeriod }: CrCountdownProps) {
-  const mtdProfit = mtdSales - mtdExpenses;
-  const avgDailyProfit = mtdProfit / daysInCurrentPeriod;
+  console.log('CrCountdown Props:', { mtdSales, mtdExpenses, daysInCurrentPeriod });
+  
+  const ytdProfit = mtdSales - mtdExpenses;
+  console.log('YTD Profit:', ytdProfit);
+  
+  const avgDailyProfit = ytdProfit / daysInCurrentPeriod;
+  console.log('Avg Daily Profit:', avgDailyProfit);
+  
   const timeToOneCr = calculateTimeToOneCr(avgDailyProfit);
-  const progressPercentage = calculateProgressPercentage(avgDailyProfit);
+  console.log('Time to 1 Cr:', timeToOneCr);
+  
+  const currentProfit = ytdProfit; // Use YTD profit directly
+  console.log('Current Profit:', currentProfit);
+  
+  const progressPercentage = calculateProgressPercentage(currentProfit);
+  console.log('Progress Percentage:', progressPercentage);
 
   return (
     <Card>

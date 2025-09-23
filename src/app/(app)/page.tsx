@@ -24,7 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import Link from 'next/link';
 import { useData } from "@/hooks/use-api-data";
 import { format, parseISO, startOfMonth, isWithinInterval, startOfYear, startOfToday, endOfMonth, endOfYear, differenceInDays } from "date-fns";
-import { CrCountdown } from "@/components/ui/cr-countdown";
+import { CrCountdownNew } from "@/components/ui/cr-countdown-new";
 import { useState, useMemo, useCallback } from 'react';
 import { ArrowDown } from "lucide-react";
 
@@ -84,6 +84,7 @@ export default function DashboardPage() {
 
   const ytdExpenses = expenses.filter(e => isWithinInterval(parseISO(e.date), { start: yearStart, end: today }));
   const ytdExpenseTotal = ytdExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+  console.log('Dashboard YTD Expenses:', ytdExpenseTotal);
 
   // Todays stats
   const todaysSales = sales.filter(s => s.date === todayStr);
@@ -137,6 +138,7 @@ export default function DashboardPage() {
   // Year-to-date stats
   const ytdSales = sales.filter(s => isWithinInterval(parseISO(s.date), { start: yearStart, end: today }));
   const ytdTotal = ytdSales.reduce((sum, sale) => sum + sale.amount, 0);
+  console.log('Dashboard YTD Total:', ytdTotal);
 
   // Top performers and therapies logic
   const { topTherapists, topTherapies } = useMemo(() => {
@@ -327,9 +329,9 @@ export default function DashboardPage() {
                   </p>
                 </CardContent>
             </Card>
-            <CrCountdown 
-                mtdSales={mtdTotal}
-                mtdExpenses={mtdExpenseTotal}
+            <CrCountdownNew 
+                ytdSales={mtdTotal}
+                ytdExpenses={mtdExpenseTotal}
                 daysInCurrentPeriod={differenceInDays(today, monthStart) + 1}
             />
             <Card className="md:col-span-3">
