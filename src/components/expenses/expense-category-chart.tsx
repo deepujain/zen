@@ -65,7 +65,7 @@ export function ExpenseCategoryChart({ categoryTotals }: ExpenseCategoryChartPro
   return (
     <Card className="h-[600px]">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">Category Breakdown</CardTitle>
+        <CardTitle className="text-2xl font-bold">Category Breakdown</CardTitle>
       </CardHeader>
       <CardContent>
         {total > 0 ? (

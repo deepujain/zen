@@ -15,8 +15,8 @@ interface SaleInput {
 
 class SalesIngester {
   private db: DatabaseService;
-  private staff: any[];
-  private rooms: any[];
+  private staff: any[] = [];
+  private rooms: any[] = [];
   private date: string;
 
   constructor(dateStr: string) {
@@ -34,7 +34,7 @@ class SalesIngester {
   private formatAmount(amount: string | number): number {
     if (typeof amount === 'number') return amount;
     // Handle "Member" case
-    if (amount.toLowerCase() === 'member') return 0;
+    if (amount.toLowerCase().includes('member')) return 0;
     // Remove commas and convert to number
     return Number(amount.replace(/,/g, ''));
   }
@@ -44,7 +44,7 @@ class SalesIngester {
     if (normalized === 'upi') return 'UPI';
     if (normalized === 'cash') return 'Cash';
     if (normalized === 'card') return 'Card';
-    if (normalized === 'member') return 'Member';
+    if (normalized.includes('member')) return 'Member';
     throw new Error(`Invalid payment method: ${method}. Must be UPI, Cash, Card, or Member`);
   }
 
@@ -68,7 +68,33 @@ class SalesIngester {
       this.staff = await this.db.getAllStaff();
     }
     const member = this.staff.find(s => s.fullName.toLowerCase() === name.toLowerCase());
-    if (!member) throw new Error(`Staff member not found: ${name}`);
+    if (!member) {
+      // Create new staff member
+      const id = `staff-${name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`;
+      const newStaff = {
+        id,
+        fullName: name,
+        role: 'Therapist' as const,
+        experienceYears: 1,
+        phoneNumber: '0000000000',
+        gender: 'Female' as const
+      };
+      try {
+        await this.db.addStaff(newStaff);
+        this.staff.push(newStaff);
+        return id;
+      } catch (error: any) {
+        if (error.message?.includes('UNIQUE constraint failed')) {
+          // If staff exists but wasn't found earlier, refresh staff list
+          this.staff = await this.db.getAllStaff();
+          const existingMember = this.staff.find(s => s.fullName.toLowerCase() === name.toLowerCase());
+          if (existingMember) {
+            return existingMember.id;
+          }
+        }
+        throw error;
+      }
+    }
     return member.id;
   }
 
@@ -76,8 +102,34 @@ class SalesIngester {
     if (!this.rooms) {
       this.rooms = await this.db.getAllRooms();
     }
+    // Handle missing room name
+    if (!name || name === '-') {
+      name = 'Classic';
+    }
     const room = this.rooms.find(r => r.name.toLowerCase() === name.toLowerCase());
-    if (!room) throw new Error(`Room not found: ${name}`);
+    if (!room) {
+      // Create new room
+      const id = `room-${name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`;
+      const newRoom = {
+        id,
+        name: name
+      };
+      try {
+        await this.db.addRoom(newRoom);
+        this.rooms.push(newRoom);
+        return id;
+      } catch (error: any) {
+        if (error.message?.includes('UNIQUE constraint failed')) {
+          // If room exists but wasn't found earlier, refresh room list
+          this.rooms = await this.db.getAllRooms();
+          const existingRoom = this.rooms.find(r => r.name.toLowerCase() === name.toLowerCase());
+          if (existingRoom) {
+            return existingRoom.id;
+          }
+        }
+        throw error;
+      }
+    }
     return room.id;
   }
 
@@ -148,7 +200,7 @@ if (require.main === module) {
 
   const jsonFile = args[0];
   try {
-    const { date, sales } = require(jsonFile);
+    const { date, sales } = require(process.cwd() + '/' + jsonFile);
     if (!date || !sales || !Array.isArray(sales)) {
       throw new Error('Invalid JSON format. Must include "date" and "sales" array.');
     }
