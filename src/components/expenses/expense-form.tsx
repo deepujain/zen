@@ -53,6 +53,7 @@ interface ExpenseFormProps {
 
 export function ExpenseForm({ onSubmit, defaultDate, trigger }: ExpenseFormProps) {
   const [open, setOpen] = React.useState(false);
+  const [isDateOpen, setIsDateOpen] = React.useState(false);
   
   console.log('Form initialization - Default date:', defaultDate?.toISOString());
   
@@ -90,7 +91,7 @@ export function ExpenseForm({ onSubmit, defaultDate, trigger }: ExpenseFormProps
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel htmlFor="expense-date">Date</FormLabel>
-                  <Popover>
+                  <Popover open={isDateOpen} onOpenChange={setIsDateOpen}>
                     <PopoverTrigger asChild>
                       <FormControl>
                         <Button
@@ -115,7 +116,11 @@ export function ExpenseForm({ onSubmit, defaultDate, trigger }: ExpenseFormProps
                       <Calendar
                         mode="single"
                         selected={field.value}
-                        onSelect={field.onChange}
+                        onSelect={(date) => {
+                          field.onChange(date);
+                          // Close the calendar popover right after selecting a date
+                          setIsDateOpen(false);
+                        }}
                         disabled={(date) =>
                           date > new Date() || date < new Date("2000-01-01")
                         }

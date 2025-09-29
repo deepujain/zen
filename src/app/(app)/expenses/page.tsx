@@ -1,13 +1,15 @@
 "use client";
 
 import * as React from "react";
-import { format } from "date-fns";
+import { format, endOfMonth, eachDayOfInterval } from "date-fns";
 import { useData } from "@/hooks/use-api-data";
 import { MonthSelector } from "@/components/ui/month-selector";
 import { ExpensesTable } from "@/components/expenses/expenses-table";
 import { ExpenseAnalytics } from "@/components/expenses/expense-analytics";
 import { ExpenseCategoryChart } from "@/components/expenses/expense-category-chart";
 import type { Expense } from "@/lib/types";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { SalesBarChart } from "@/components/ui/sales-bar-chart";
 
 export default function ExpensesPage() {
   const startDate = new Date(2025, 8, 1); // September 2025
@@ -116,6 +118,45 @@ export default function ExpensesPage() {
     }
   };
 
+  // Compute Daily Expense Trend for selected month (mirrors Daily Sales Trend)
+  const selectedMonth = React.useMemo(() => format(selectedDate, 'yyyy-MM'), [selectedDate]);
+
+  const { dailyExpensesForSelectedMonth, maxDailyExpense, minDailyExpense, avgDailyExpense } = React.useMemo(() => {
+    // Build month start/end using local time to avoid timezone shifts
+    const [yearStr, monthStr] = selectedMonth.split('-');
+    const year = Number(yearStr);
+    const monthIndex = Number(monthStr) - 1; // 0-based
+    const monthStart = new Date(year, monthIndex, 1);
+    const monthEnd = endOfMonth(monthStart);
+
+    const expensesForSelectedMonth = expenses.filter(e => {
+      // e.date is 'yyyy-MM-dd' — construct a local date
+      const [ey, em, ed] = e.date.split('-').map(Number);
+      const d = new Date(ey, em - 1, ed);
+      return d >= monthStart && d <= monthEnd;
+    });
+
+    const allDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
+
+    const daily = allDays.map(d => {
+      const dateStr = format(d, 'yyyy-MM-dd');
+      const total = expensesForSelectedMonth
+        .filter(e => e.date === dateStr)
+        .reduce((sum, e) => sum + (Number.isFinite(e.amount) ? e.amount : 0), 0);
+      return {
+        name: format(d, 'd'),
+        total: total > 0 ? total : null,
+      };
+    });
+
+    const values = daily.filter(x => x.total !== null && (x.total as number) > 0).map(x => x.total as number);
+    const max = values.length ? Math.max(...values) : 0;
+    const min = values.length ? Math.min(...values) : 0;
+    const avg = values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0;
+
+    return { dailyExpensesForSelectedMonth: daily, maxDailyExpense: max, minDailyExpense: min, avgDailyExpense: avg };
+  }, [expenses, selectedMonth]);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-end mb-6">
@@ -131,6 +172,28 @@ export default function ExpensesPage() {
           expenses={expenses}
           selectedDate={selectedDate}
         />
+
+        {/* Daily Expense Trend */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Daily Expense Trend</CardTitle>
+            <CardDescription>Daily expense totals for the current month</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col lg:flex-row lg:items-start gap-4">
+              <div className="w-full lg:w-11/12">
+                <SalesBarChart data={dailyExpensesForSelectedMonth} type="daily" selectedMonth={selectedMonth} />
+              </div>
+              {dailyExpensesForSelectedMonth.length > 0 && (
+                <div className="w-full lg:w-1/12 mt-4 lg:mt-0 text-sm text-muted-foreground flex lg:flex-col justify-center lg:justify-start items-center lg:items-end gap-2 px-0">
+                  <span style={{ fontFamily: 'Segoe UI, Roboto, "Helvetica Neue", Arial, sans-serif' }}>Max: ₹{maxDailyExpense.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
+                  <span style={{ fontFamily: 'Segoe UI, Roboto, "Helvetica Neue", Arial, sans-serif' }}>Min: ₹{minDailyExpense.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
+                  <span style={{ fontFamily: 'Segoe UI, Roboto, "Helvetica Neue", Arial, sans-serif' }}>Avg: ₹{avgDailyExpense.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
         <div className="grid gap-6 lg:grid-cols-2">
           <ExpensesTable
