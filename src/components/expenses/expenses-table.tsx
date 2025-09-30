@@ -158,11 +158,33 @@ export function ExpensesTable({
     });
   };
 
+  const handleDeleteSelected = async () => {
+    if (selectedRows.size === 0) return;
+    const confirmMsg = selectedRows.size === 1
+      ? 'Delete selected expense?'
+      : `Delete ${selectedRows.size} selected expenses?`;
+    if (!window.confirm(confirmMsg)) return;
+    for (const id of Array.from(selectedRows)) {
+      await onDeleteExpense(id);
+    }
+    setSelectedRows(new Set());
+  };
+
   return (
     <Card className="w-full max-w-7xl mx-auto">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
         <CardTitle className="text-2xl font-bold">Expenses</CardTitle>
         <div className="flex items-center gap-2">
+          <Button
+            size="lg"
+            variant={selectedRows.size > 0 ? "destructive" : "outline"}
+            className="flex items-center gap-2"
+            disabled={selectedRows.size === 0}
+            onClick={handleDeleteSelected}
+          >
+            <Trash2 className="h-5 w-5" />
+            {selectedRows.size > 0 ? `Delete Selected (${selectedRows.size})` : 'Delete Selected'}
+          </Button>
           <ExpenseForm
             onSubmit={onAddExpense}
             trigger={
@@ -213,7 +235,20 @@ export function ExpensesTable({
           <Table>
             <TableHeader className="sticky top-0 bg-background z-10">
               <TableRow>
-                <TableHead className="w-12"></TableHead>
+                <TableHead className="w-12">
+                  <Checkbox
+                    checked={monthlyExpenses.length > 0 && monthlyExpenses.every(e => selectedRows.has(e.id))}
+                    indeterminate={monthlyExpenses.some(e => selectedRows.has(e.id)) && !monthlyExpenses.every(e => selectedRows.has(e.id))}
+                    onCheckedChange={(checked) => {
+                      setSelectedRows(() => {
+                        if (checked) {
+                          return new Set(monthlyExpenses.map(e => e.id));
+                        }
+                        return new Set();
+                      });
+                    }}
+                  />
+                </TableHead>
                 <TableHead>
                   <Button variant="ghost" onClick={() => handleSort('category')} className="flex items-center">
                     Category {sorting?.column === 'category' && (sorting.direction === 'asc' ? '↑' : '↓')}

@@ -28,7 +28,11 @@ import { useData } from "@/hooks/use-api-data"
 const formSchema = z.object({
   fullName: z.string().min(2, { message: "Full name must be at least 2 characters." }),
   role: z.enum(["Manager", "Therapist", "Receptionist"], { required_error: "Please select a role." }),
-  phoneNumber: z.string().regex(/^\d{10}$/, { message: "Phone number must be 10 digits." }),
+  // Phone number is optional: allow empty string or exactly 10 digits
+  phoneNumber: z.union([
+    z.string().regex(/^\d{10}$/, { message: "Phone number must be 10 digits." }),
+    z.literal("")
+  ]),
   experienceYears: z.coerce.number().min(0, { message: "Experience cannot be negative." }),
   gender: z.enum(["Male", "Female"], { required_error: "Please select a gender." }),
 })
@@ -55,10 +59,13 @@ export default function EditStaffForm({ staffMember, setOpen }: EditStaffFormPro
   })
 
   function onSubmit(values: z.infer<typeof formSchema>) {
+    const formattedPhone = values.phoneNumber
+      ? `+91 ${values.phoneNumber.substring(0,5)} ${values.phoneNumber.substring(5)}`
+      : "";
     const updatedStaffMember: Staff = {
       ...staffMember,
       ...values,
-      phoneNumber: `+91 ${values.phoneNumber.substring(0,5)} ${values.phoneNumber.substring(5)}`,
+      phoneNumber: formattedPhone,
     };
     updateStaff(updatedStaffMember);
 

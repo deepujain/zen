@@ -330,10 +330,12 @@ export default function SalesPage() {
     }
   };
 
-  const handleSelectAllSales = (isSelected: boolean) => {
+  const handleSelectAllAcrossAllDays = (salesList: Sale[], isSelected: boolean) => {
     if (isSelected) {
-      setSelectedSales([]); // Now acts as clear all
-      setSelectedDays([]);
+      const allIds = salesList.map(s => s.id);
+      setSelectedSales(allIds);
+      const allDates = Array.from(new Set(salesList.map(s => format(parseISO(s.date), 'yyyy-MM-dd'))));
+      setSelectedDays(allDates);
     } else {
       setSelectedSales([]);
       setSelectedDays([]);
@@ -400,7 +402,11 @@ export default function SalesPage() {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[50px]">
-                  {/* Removed Select All Checkbox */}
+                  <Checkbox 
+                    checked={salesToRender.length > 0 && salesToRender.every(s => selectedSales.includes(s.id))}
+                    onCheckedChange={(checked: boolean) => handleSelectAllAcrossAllDays(salesToRender, checked)}
+                    aria-label="Select all sales across all days"
+                  />
                 </TableHead>
                 <TableHead>Sl No</TableHead>
                 <TableHead>
